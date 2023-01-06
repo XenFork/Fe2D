@@ -1,0 +1,188 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'signing'
+    id 'maven-publish'
+}
+
+import org.gradle.internal.os.OperatingSystem
+
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+
+group projGroupId
+archivesBaseName = projArtifactId
+version = projVersion
+
+if (Boolean.parseBoolean(System.getProperty("project.bindAllNative"))) {
+    project.ext.lwjglNatives = [
+        'linux-arm32', 'linux-arm64', 'linux',
+        'macos-arm64', 'macos',
+        'windows-arm64', 'windows-x86', 'windows'
+    ]
+} else {
+    def osArch = System.getProperty("os.arch")
+    switch (OperatingSystem.current()) {
+        case OperatingSystem.LINUX:
+            project.ext.lwjglNatives = [osArch.startsWith("arm") || osArch.startsWith("aarch64")
+                ? "linux-${osArch.contains("64") || osArch.startsWith("armv8") ? "arm64" : "arm32"}"
+                : "linux"]
+            break
+        case OperatingSystem.MAC_OS:
+            project.ext.lwjglNatives = [osArch.startsWith("aarch64") ? "macos-arm64" : "macos"]
+            break
+        case OperatingSystem.WINDOWS:
+            project.ext.lwjglNatives = [osArch.contains("64")
+                ? "windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
+                : "windows-x86"]
+            break
+    }
+}
+
+repositories {
+    // Avoid repeatedly detecting dependencies from the server
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    // temporary maven repositories
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/releases' }
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+    api 'org.joml:joml:1.10.5'
+    api 'org.slf4j:slf4j-api:2.0.6'
+    api 'io.github.over-run:bin-packing:0.1.0'
+
+    compileOnly 'org.jetbrains:annotations:23.1.0'
+    testCompileOnly 'org.jetbrains:annotations:23.1.0'
+
+    testCompileOnly 'org.slf4j:slf4j-simple:2.0.6'
+
+    api platform("org.lwjgl:lwjgl-bom:3.3.1")
+    for (String depend in ['', '-glfw', '-opengl', '-stb', '-jemalloc']) {
+        api "org.lwjgl:lwjgl$depend"
+        for (String platform in lwjglNatives) {
+            testRuntimeOnly "org.lwjgl:lwjgl$depend::natives-$platform"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    manifestContentCharset 'utf-8'
+    metadataCharset 'utf-8'
+    from 'LICENSE'
+    manifest.attributes(
+        'Specification-Title': projName,
+        'Specification-Vendor': orgName,
+        'Specification-Version': '0',
+        'Implementation-Title': projName,
+        'Implementation-Vendor': orgName,
+        'Implementation-Version': archiveVersion
+    )
+}
+
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
+    archiveClassifier.set 'sources'
+    from sourceSets.main.allSource, 'LICENSE'
+}
+
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier.set 'javadoc'
+    from javadoc, 'LICENSE'
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    failOnError = false
+    options.encoding 'UTF-8'
+    options.charSet 'UTF-8'
+    options.author true
+    options.locale 'en_US'
+    options.links "https://docs.oracle.com/en/java/javase/$sourceCompatibility/docs/api/"
+    options.windowTitle "$projName $projVersion Javadoc"
+}
+
+publishing.publications {
+    it.register('mavenJava', MavenPublication) {
+        groupId = projGroupId as Publication
+        artifactId = projArtifactId
+        version = projVersion
+        description = projDesc
+        from components.java
+        pom {
+            name = projName
+            description = projDesc
+            url.set "https://github.com/$projVcs"
+            licenses {
+                license {
+                    name.set 'MIT'
+                    url.set "https://raw.githubusercontent.com/$projVcs/$projBranch/LICENSE"
+                }
+            }
+            organization {
+                name = orgName
+                url = orgUrl
+            }
+            developers {
+                String[] prop = (project.developers as String).split(',')
+                for (String s : prop) {
+                    String[] dev = s.split(':', 3)
+                    developer {
+                        id.set dev[0]
+                        name.set dev[1]
+                        email.set dev[2]
+                    }
+                }
+            }
+            scm {
+                connection.set "scm:git:https://github.com/${projVcs}.git"
+                developerConnection.set "scm:git:https://github.com/${projVcs}.git"
+                url.set "https://github.com/${projVcs}.git"
+            }
+        }
+    }
+}
+// You have to add 'OSSRH_USERNAME', 'OSSRH_PASSWORD', 'signing.keyId',
+// 'signing.password' and 'signing.secretKeyRingFile' to
+// GRADLE_USER_HOME/gradle.properties
+publishing.repositories {
+    maven {
+        name = "OSSRH"
+        credentials {
+            username = project.findProperty("OSSRH_USERNAME") ?: "null"
+            password = project.findProperty("OSSRH_PASSWORD") ?: "null"
+        }
+        url = version.endsWith('-SNAPSHOT')
+            ? "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            : "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
+    maven {
+        name = "GithubPackages"
+        url = uri("https://maven.pkg.github.com/$projVcs")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+        }
+    }
+}
+
+signing {
+    if (!version.endsWith('-SNAPSHOT') && Boolean.parseBoolean(System.getProperty("gpg.signing", "true")))
+        sign publishing.publications.mavenJava
+}
+
+idea.module.inheritOutputDirs = true
