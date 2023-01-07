@@ -18,6 +18,7 @@
 
 package union.xenfork.fe2d;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
 import org.lwjgl.opengl.GL;
@@ -119,6 +120,17 @@ public class Application implements Disposable {
 
     public void render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    /**
+     * Disposes a resource, when it is not {@code null}.
+     *
+     * @param disposable the resource to be disposed.
+     */
+    protected static void dispose(@Nullable Disposable disposable) {
+        if (disposable != null) {
+            disposable.dispose();
+        }
     }
 
     @Override

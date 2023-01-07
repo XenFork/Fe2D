@@ -39,7 +39,7 @@ if (Boolean.parseBoolean(System.getProperty("project.bindAllNative"))) {
 }
 
 repositories {
-    // Avoid repeatedly detecting dependencies from the server
+    // baka4n: Avoid repeatedly detecting dependencies from the server
     mavenLocal()
     mavenCentral()
     maven { url 'https://maven.aliyun.com/repository/central' }

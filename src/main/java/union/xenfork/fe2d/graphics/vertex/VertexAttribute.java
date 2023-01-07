@@ -18,6 +18,8 @@
 
 package union.xenfork.fe2d.graphics.vertex;
 
+import union.xenfork.fe2d.graphics.DataType;
+
 /**
  * The vertex attribute.
  *
@@ -45,6 +47,7 @@ public final class VertexAttribute {
     private final int index;
     private final String name;
     private final int size;
+    private final DataType type;
     private final boolean normalized;
     private final boolean shaderDefined;
     private final boolean direct;
@@ -52,12 +55,14 @@ public final class VertexAttribute {
     private VertexAttribute(int index,
                             String name,
                             int size,
+                            DataType type,
                             boolean normalized,
                             boolean shaderDefined,
                             boolean direct) {
         this.index = index;
         this.name = name;
         this.size = size;
+        this.type = type;
         this.normalized = normalized;
         this.shaderDefined = shaderDefined;
         this.direct = direct;
@@ -73,14 +78,15 @@ public final class VertexAttribute {
      *
      * @param name       the name of the vertex attribute.
      * @param size       the component size of the vertex attribute.
+     * @param type       the data type of the vertex attribute.
      * @param normalized whether fixed-point data values should be normalized or converted directly as fixed-point values
      *                   when they are accessed.
      * @return the vertex attribute.
-     * @see #ofShaderDefined(String, int, boolean) shaderDefined
-     * @see #ofDirect(int, String, int, boolean) direct
+     * @see #ofShaderDefined(String, int, DataType, boolean) shaderDefined
+     * @see #ofDirect(int, String, int, DataType, boolean) direct
      */
-    public static VertexAttribute ofImplicit(String name, int size, boolean normalized) {
-        return new VertexAttribute(-1, name, size, normalized, false, false);
+    public static VertexAttribute ofImplicit(String name, int size, DataType type, boolean normalized) {
+        return new VertexAttribute(-1, name, size, type, normalized, false, false);
     }
 
     /**
@@ -92,14 +98,15 @@ public final class VertexAttribute {
      *
      * @param name       the name of the vertex attribute.
      * @param size       the component size of the vertex attribute.
+     * @param type       the data type of the vertex attribute.
      * @param normalized whether fixed-point data values should be normalized or converted directly as fixed-point values
      *                   when they are accessed.
      * @return the vertex attribute.
-     * @see #ofImplicit(String, int, boolean) implicit
-     * @see #ofDirect(int, String, int, boolean) direct
+     * @see #ofImplicit(String, int, DataType, boolean) implicit
+     * @see #ofDirect(int, String, int, DataType, boolean) direct
      */
-    public static VertexAttribute ofShaderDefined(String name, int size, boolean normalized) {
-        return new VertexAttribute(-1, name, size, normalized, true, false);
+    public static VertexAttribute ofShaderDefined(String name, int size, DataType type, boolean normalized) {
+        return new VertexAttribute(-1, name, size, type, normalized, true, false);
     }
 
     /**
@@ -112,34 +119,70 @@ public final class VertexAttribute {
      * @param index      the index of the vertex attribute.
      * @param name       the name of the vertex attribute.
      * @param size       the component size of the vertex attribute.
+     * @param type       the data type of the vertex attribute.
      * @param normalized whether fixed-point data values should be normalized or converted directly as fixed-point values
      *                   when they are accessed.
      * @return the vertex attribute.
-     * @see #ofImplicit(String, int, boolean) implicit
-     * @see #ofShaderDefined(String, int, boolean) shaderDefined
+     * @see #ofImplicit(String, int, DataType, boolean) implicit
+     * @see #ofShaderDefined(String, int, DataType, boolean) shaderDefined
      */
-    public static VertexAttribute ofDirect(int index, String name, int size, boolean normalized) {
-        return new VertexAttribute(index, name, size, normalized, true, true);
+    public static VertexAttribute ofDirect(int index, String name, int size, DataType type, boolean normalized) {
+        return new VertexAttribute(index, name, size, type, normalized, false, true);
     }
 
+    /**
+     * Creates the position attribute.
+     *
+     * @return the position attribute selector.
+     */
     public static Builtin position() {
-        return new Builtin(POSITION_ATTRIB, 3, false);
+        return new Builtin(POSITION_ATTRIB, 3, DataType.FLOAT, false);
     }
 
+    /**
+     * Creates the color attribute.
+     *
+     * @return the color attribute selector.
+     */
     public static Builtin color() {
-        return new Builtin(COLOR_ATTRIB, 4, false);
+        return new Builtin(COLOR_ATTRIB, 4, DataType.FLOAT, false);
     }
 
+    /**
+     * Creates the color attribute, which all channels are packed in ABGR.
+     *
+     * @return the color attribute selector.
+     */
     public static Builtin colorPacked() {
-        return new Builtin(COLOR_ATTRIB, 4, true);
+        return new Builtin(COLOR_ATTRIB, 4, DataType.UNSIGNED_BYTE, true);
     }
 
+    /**
+     * Creates the texture coordinate attribute.
+     *
+     * @param unit the texture coordinate unit.
+     * @return the texture coordinate attribute selector.
+     */
     public static Builtin texCoord(int unit) {
-        return new Builtin(TEX_COORD_ATTRIB + unit, 2, false);
+        return new Builtin(TEX_COORD_ATTRIB + unit, 2, DataType.FLOAT, false);
     }
 
+    /**
+     * Creates the vertex normal attribute.
+     *
+     * @return the vertex normal attribute selector.
+     */
     public static Builtin normal() {
-        return new Builtin(NORMAL_ATTRIB, 3, true);
+        return new Builtin(NORMAL_ATTRIB, 3, DataType.FLOAT, false);
+    }
+
+    /**
+     * Creates the vertex normal attribute, which all channels are packed in ZYX.
+     *
+     * @return the vertex normal attribute selector.
+     */
+    public static Builtin normalPacked() {
+        return new Builtin(NORMAL_ATTRIB, 3, DataType.BYTE, true);
     }
 
     /**
@@ -151,11 +194,13 @@ public final class VertexAttribute {
     public static final class Builtin {
         private final String name;
         private final int size;
+        private final DataType type;
         private final boolean normalized;
 
-        private Builtin(String name, int size, boolean normalized) {
+        private Builtin(String name, int size, DataType type, boolean normalized) {
             this.name = name;
             this.size = size;
+            this.type = type;
             this.normalized = normalized;
         }
 
@@ -163,20 +208,20 @@ public final class VertexAttribute {
          * Creates the implicit attribute.
          *
          * @return the vertex attribute.
-         * @see #ofImplicit(String, int, boolean)
+         * @see #ofImplicit(String, int, DataType, boolean)
          */
         public VertexAttribute getImplicit() {
-            return ofImplicit(name, size, normalized);
+            return ofImplicit(name, size, type, normalized);
         }
 
         /**
          * Creates the shader defined attribute.
          *
          * @return the vertex attribute.
-         * @see #ofShaderDefined(String, int, boolean)
+         * @see #ofShaderDefined(String, int, DataType, boolean)
          */
         public VertexAttribute getShaderDefined() {
-            return ofShaderDefined(name, size, normalized);
+            return ofShaderDefined(name, size, type, normalized);
         }
 
         /**
@@ -184,10 +229,10 @@ public final class VertexAttribute {
          *
          * @param index the index of the vertex attribute.
          * @return the vertex attribute.
-         * @see #ofDirect(int, String, int, boolean)
+         * @see #ofDirect(int, String, int, DataType, boolean)
          */
         public VertexAttribute getDirect(int index) {
-            return ofDirect(index, name, size, normalized);
+            return ofDirect(index, name, size, type, normalized);
         }
     }
 
@@ -203,11 +248,15 @@ public final class VertexAttribute {
         return size;
     }
 
+    public DataType type() {
+        return type;
+    }
+
     public boolean normalized() {
         return normalized;
     }
 
-    public boolean explicit() {
+    public boolean shaderDefined() {
         return shaderDefined;
     }
 

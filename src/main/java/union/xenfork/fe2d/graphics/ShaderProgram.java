@@ -18,7 +18,13 @@
 
 package union.xenfork.fe2d.graphics;
 
+import org.joml.Matrix4fc;
+import org.joml.Vector4fc;
 import union.xenfork.fe2d.Disposable;
+import union.xenfork.fe2d.graphics.vertex.VertexLayout;
+
+import java.util.*;
+import java.util.function.IntConsumer;
 
 import static org.lwjgl.opengl.GL20C.*;
 
@@ -34,6 +40,8 @@ public final class ShaderProgram implements Disposable {
      */
     public static final ShaderProgram ZERO = new ShaderProgram(0);
     private final int id;
+    private final Map<String, Integer> attributeIndexMap = new LinkedHashMap<>();
+    private final Map<String, ShaderUniform> uniformMap = new HashMap<>();
 
     private static int compileShader(String typeName, int typeEnum, String source)
         throws IllegalStateException {
@@ -56,10 +64,65 @@ public final class ShaderProgram implements Disposable {
      *
      * @param vertexShader   the source of vertex shader.
      * @param fragmentShader the source of fragment shader.
+     * @param attributeList  the attribute names that is in the shader.
+     */
+    public ShaderProgram(String vertexShader,
+                         String fragmentShader,
+                         List<String> attributeList) {
+        this.id = init(vertexShader, fragmentShader, null);
+        for (String attribute : attributeList) {
+            attributeIndexMap.put(attribute, glGetAttribLocation(id, attribute));
+        }
+    }
+
+    /**
+     * Creates a shader program with the given source of shaders.
+     *
+     * @param vertexShader   the source of vertex shader.
+     * @param fragmentShader the source of fragment shader.
+     * @param attributeMap   the attribute locations to be bound.
+     */
+    public ShaderProgram(String vertexShader,
+                         String fragmentShader,
+                         Map<String, Integer> attributeMap) {
+        attributeIndexMap.putAll(attributeMap);
+        this.id = init(vertexShader, fragmentShader, id -> {
+            for (var e : attributeMap.entrySet()) {
+                glBindAttribLocation(id, e.getValue(), e.getKey());
+            }
+        });
+    }
+
+    /**
+     * Creates a shader program with the given source of shaders.
+     *
+     * @param vertexShader   the source of vertex shader.
+     * @param fragmentShader the source of fragment shader.
+     * @param layout         the attribute locations to be bound.
+     */
+    public ShaderProgram(String vertexShader,
+                         String fragmentShader,
+                         VertexLayout layout) {
+        this.id = init(vertexShader, fragmentShader, id ->
+            layout.forEachAttribute((attribute, index) -> {
+                attributeIndexMap.put(attribute.name(), index);
+                glBindAttribLocation(id, index, attribute.name());
+            }));
+    }
+
+    /**
+     * Creates a shader program with the given source of shaders.
+     *
+     * @param vertexShader   the source of vertex shader.
+     * @param fragmentShader the source of fragment shader.
      */
     public ShaderProgram(String vertexShader,
                          String fragmentShader) {
-        this(glCreateProgram());
+        this.id = init(vertexShader, fragmentShader, null);
+    }
+
+    private int init(String vertexShader, String fragmentShader, IntConsumer action) {
+        int id = glCreateProgram();
         int vsh, fsh;
         try {
             vsh = compileShader("vertex", GL_VERTEX_SHADER, vertexShader);
@@ -70,6 +133,9 @@ public final class ShaderProgram implements Disposable {
         }
         glAttachShader(id, vsh);
         glAttachShader(id, fsh);
+        if (action != null) {
+            action.accept(id);
+        }
         glLinkProgram(id);
         if (glGetProgrami(id, GL_LINK_STATUS) == GL_FALSE) {
             glDeleteShader(vsh);
@@ -81,13 +147,104 @@ public final class ShaderProgram implements Disposable {
         glDetachShader(id, fsh);
         glDeleteShader(vsh);
         glDeleteShader(fsh);
+        return id;
     }
 
     /**
      * Installs this program object as part of current rendering state.
      */
-    public void use() {glVertexAttribPointer(0,0,0,false,0,0);
-        glUseProgram(id);
+    public void use() {
+        GLStateManager.useProgram(id);
+    }
+
+    /**
+     * Gets a uniform with the given name, or creates a new uniform if not found.
+     *
+     * @param name the name of the uniform.
+     * @param type the type of the uniform.
+     * @return the uniform, or empty if not found.
+     */
+    public Optional<ShaderUniform> getUniform(String name, ShaderUniform.Type type) {
+        if (uniformMap.containsKey(name)) {
+            return Optional.ofNullable(uniformMap.get(name));
+        }
+        int location = glGetUniformLocation(id, name);
+        if (location == -1) {
+            uniformMap.put(name, null);
+            return Optional.empty();
+        }
+        ShaderUniform uniform = new ShaderUniform(location, type);
+        uniformMap.put(name, uniform);
+        return Optional.of(uniform);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, int value) {
+        getUniform(name, ShaderUniform.Type.INT)
+            .ifPresent(uniform -> uniform.markDirty().buffer
+                .putInt(0, value));
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name the name of the uniform.
+     * @param x    the value x.
+     * @param y    the value y.
+     * @param z    the value z.
+     * @param w    the value w.
+     */
+    public void setUniform(String name, float x, float y, float z, float w) {
+        getUniform(name, ShaderUniform.Type.VEC4)
+            .ifPresent(uniform -> uniform.markDirty().buffer
+                .putFloat(0, x).putFloat(4, y).putFloat(8, z).putFloat(12, w));
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Vector4fc value) {
+        setUniform(name, value.x(), value.y(), value.z(), value.w());
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Matrix4fc value) {
+        getUniform(name, ShaderUniform.Type.MAT4)
+            .ifPresent(uniform -> value.get(uniform.markDirty().buffer));
+    }
+
+    /**
+     * Uploads the uniforms that are set.
+     */
+    public void uploadUniforms() {
+        for (ShaderUniform uniform : uniformMap.values()) {
+            if (uniform != null) {
+                uniform.upload(this);
+            }
+        }
+    }
+
+    /**
+     * Gets the index of the given attribute.
+     *
+     * @param name the name of the attribute.
+     * @return the index of the attribute.
+     */
+    public int getAttributeIndex(String name) {
+        return attributeIndexMap.getOrDefault(name, -1);
     }
 
     /**
@@ -102,5 +259,10 @@ public final class ShaderProgram implements Disposable {
     @Override
     public void dispose() {
         glDeleteProgram(id);
+        for (ShaderUniform uniform : uniformMap.values()) {
+            if (uniform != null) {
+                uniform.dispose();
+            }
+        }
     }
 }
