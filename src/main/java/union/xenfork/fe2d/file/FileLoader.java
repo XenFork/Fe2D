@@ -26,14 +26,16 @@ import union.xenfork.fe2d.util.ResourcePath;
  * @author squid233
  * @since 0.1.0
  */
-public final class FileUtils {
+public final class FileLoader {
+    private static final FileLoader INSTANCE = new FileLoader();
+
     /**
      * Creates an internal file context with the given path.
      *
      * @param path the path.
      * @return the file context which loads files from classpath.
      */
-    public static FileContext internal(String path) {
+    public FileContext internal(String path) {
         return new InternalFileContext(path);
     }
 
@@ -43,7 +45,7 @@ public final class FileUtils {
      * @param path the path.
      * @return the file context which loads files from classpath.
      */
-    public static FileContext internal(ResourcePath path) {
+    public FileContext internal(ResourcePath path) {
         return new InternalFileContext(path.toLocation());
     }
 
@@ -54,7 +56,16 @@ public final class FileUtils {
      * @param prefix the prefix of the path.
      * @return the file context which loads files from classpath.
      */
-    public static FileContext internal(ResourcePath path, String prefix) {
+    public FileContext internal(ResourcePath path, String prefix) {
         return new InternalFileContext(path.toLocation(prefix));
+    }
+
+    /**
+     * Gets the instance.
+     *
+     * @return the instance.
+     */
+    public static FileLoader getInstance() {
+        return INSTANCE;
     }
 }

@@ -21,10 +21,11 @@ package union.xenfork.fe2d.test;
 import org.lwjgl.opengl.GL11C;
 import union.xenfork.fe2d.Application;
 import union.xenfork.fe2d.ApplicationConfig;
-import union.xenfork.fe2d.file.FileUtils;
+import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.ShaderProgram;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
+import union.xenfork.fe2d.graphics.texture.Texture;
 import union.xenfork.fe2d.graphics.vertex.VertexAttribute;
 import union.xenfork.fe2d.graphics.vertex.VertexLayout;
 import union.xenfork.fe2d.util.ResourcePath;
@@ -38,35 +39,45 @@ import union.xenfork.fe2d.util.ResourcePath;
 public final class Breakout extends Application {
     private ShaderProgram shaderProgram;
     private Mesh mesh;
+    private Texture texture;
 
     @Override
     public void init() {
         super.init();
         GL11C.glClearColor(0f, 0f, 0f, 1f);
+
         VertexLayout layout = new VertexLayout(
             VertexAttribute.position().getImplicit(),
             VertexAttribute.colorPacked().getImplicit(),
             VertexAttribute.texCoord(0).getImplicit()
         );
         shaderProgram = new ShaderProgram(
-            FileUtils.internal(new ResourcePath("breakout:shader/shader.vsh"), ResourcePath.ASSETS).loadString(),
-            FileUtils.internal(new ResourcePath("breakout:shader/shader.fsh"), ResourcePath.ASSETS).loadString(),
+            Fe2D.files.internal(new ResourcePath("breakout:shader/shader.vsh"), ResourcePath.ASSETS).loadString(),
+            Fe2D.files.internal(new ResourcePath("breakout:shader/shader.fsh"), ResourcePath.ASSETS).loadString(),
             layout
         );
-        mesh = Mesh.dynamic(layout, 3, 3);
+        shaderProgram.setUniform("Sampler0", 0);
+
+        mesh = Mesh.dynamic(layout, 4, 6);
         mesh.setVertices(vertexBuilder -> vertexBuilder
-            .floats(0.0f, 0.5f, 0.0f).ints(Color.rgbaPackABGR(1f, 0f, 0f, 1f))
+            .floats(-0.0f, 0.5f, 0.0f).ints(Color.rgbaPackABGR(1f, 0f, 0f, 1f))
             .floats(-0.5f, -0.5f, 0.0f).ints(Color.rgbaPackABGR(0f, 1f, 0f, 1f))
             .floats(0.5f, -0.5f, 0.0f).ints(Color.rgbaPackABGR(0f, 0f, 1f, 1f))
+            .floats(0.5f, 0.5f, 0.0f).ints(Color.rgbaPackABGR(1f, 1f, 1f, 1f))
         );
-        mesh.setIndices(0, 1, 2);
+        mesh.setIndices(0, 1, 2, 0, 2, 3);
+
+        texture = Texture.ofImage(Fe2D.files.internal(new ResourcePath("breakout:texture/brick.png"), ResourcePath.ASSETS));
     }
 
     @Override
     public void render() {
         super.render();
         shaderProgram.use();
+        shaderProgram.uploadUniforms();
+        texture.bind();
         mesh.render();
+        Texture.ZERO.bind();
         ShaderProgram.ZERO.use();
     }
 
@@ -75,6 +86,7 @@ public final class Breakout extends Application {
         super.dispose();
         dispose(shaderProgram);
         dispose(mesh);
+        dispose(texture);
     }
 
     public static void main(String[] args) {

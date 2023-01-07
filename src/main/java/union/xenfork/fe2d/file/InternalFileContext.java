@@ -103,4 +103,9 @@ public final class InternalFileContext extends FileContext {
             throw fail(e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "{ Internal File Context: " + path() + " }";
+    }
 }

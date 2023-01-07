@@ -8,3 +8,4 @@ Added: VertexBuilder
 Added: Mesh
 Added: Texture
 Added: SpriteBatch
+Added: Timer
