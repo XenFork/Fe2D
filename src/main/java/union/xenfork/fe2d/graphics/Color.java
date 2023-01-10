@@ -25,6 +25,10 @@ package union.xenfork.fe2d.graphics;
  * @since 0.1.0
  */
 public final class Color {
+    /**
+     * The packed white color bits.
+     */
+    public static final int WHITE_BITS = rgbaPackABGR(1f, 1f, 1f, 1f);
     private static final float INV_BYTE_TO_FLOAT = 1.0f / 255.0f;
 
     /**

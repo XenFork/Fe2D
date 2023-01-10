@@ -16,24 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d;
-
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+package union.xenfork.fe2d.test
 
 /**
- * The global objects of Fork Engine 2D.
+ * breakout game
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
-    /**
-     * The file loader.
-     */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
+fun main() {
 }

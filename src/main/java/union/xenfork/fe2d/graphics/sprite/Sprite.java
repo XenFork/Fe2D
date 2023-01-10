@@ -16,24 +16,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d;
-
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+package union.xenfork.fe2d.graphics.sprite;
 
 /**
- * The global objects of Fork Engine 2D.
+ * The sprite, which contains a texture, position, anchor, rotation and scale.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
+public class Sprite {
     /**
-     * The file loader.
+     * The sprite vertex count.
      */
-    public static final FileLoader files = FileLoader.getInstance();
+    public static final int SPRITE_VERTEX = 4;
     /**
-     * The graphics mode.
+     * The sprite vertex size in bytes.
      */
-    public static final Graphics graphics = Graphics.getInstance();
+    public static final int SPRITE_SIZE = SPRITE_VERTEX * (3 * Float.BYTES + 4 * Byte.BYTES + 2 * Float.BYTES);
 }

@@ -21,12 +21,15 @@ package union.xenfork.fe2d;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.APIUtil;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.IntBuffer;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,9 +43,21 @@ import static org.lwjgl.opengl.GL11C.*;
  * @since 0.1.0
  */
 public class Application implements Disposable {
+    /**
+     * The logger that is initialized with the application name.
+     */
     protected Logger logger;
+    /**
+     * The window handle.
+     */
     protected long window;
 
+    /**
+     * Prints a message.
+     *
+     * @param useStderr {@code true} uses standard error output stream.
+     * @param msg       the message to be printed.
+     */
     protected void log(boolean useStderr, String msg) {
         if (useStderr) {
             System.err.println(msg);
@@ -51,6 +66,11 @@ public class Application implements Disposable {
         }
     }
 
+    /**
+     * Launches this application with the given configuration.
+     *
+     * @param config the configuration.
+     */
     public void launch(ApplicationConfig config) {
         logger = LoggerFactory.getLogger(config.applicationName);
         GLFWErrorCallback.create(new GLFWErrorCallbackI() {
@@ -88,9 +108,35 @@ public class Application implements Disposable {
                     throw new IllegalStateException("Failed to create the GLFW window");
                 }
                 try {
+                    // Sets callbacks
+                    glfwSetFramebufferSizeCallback(window, (handle, width, height) -> {
+                        Fe2D.graphics.setSize(width, height);
+                        onResize(width, height);
+                    });
+
+                    // Makes center
+                    //if (config.windowMonitor != MemoryUtil.NULL) {
+                    GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+                    if (vidMode != null) {
+                        glfwSetWindowPos(window,
+                            (vidMode.width() - config.windowWidth) / 2,
+                            (vidMode.height() - config.windowHeight) / 2);
+                    }
+                    //}
+
+                    // Creates GL context
                     glfwMakeContextCurrent(window);
                     GL.createCapabilities(true);
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        IntBuffer pw = stack.callocInt(1);
+                        IntBuffer ph = stack.callocInt(1);
+                        glfwGetFramebufferSize(window, pw, ph);
+                        Fe2D.graphics.setSize(pw.get(0), ph.get(0));
+                        onResize(pw.get(0), ph.get(0));
+                    }
                     init();
+
+                    // Game loop
                     while (!glfwWindowShouldClose(window)) {
                         glfwPollEvents();
                         update();
@@ -109,18 +155,56 @@ public class Application implements Disposable {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Callbacks
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * On framebuffer resizing.
+     *
+     * @param width  the new width.
+     * @param height the new height.
+     */
+    public void onResize(int width, int height) {
+        glViewport(0, 0, width, height);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Pre-loop
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Before creating window.
+     */
     public void start() {
     }
 
+    /**
+     * After creating GL context and before game looping.
+     */
     public void init() {
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Loop
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Updating game objects per frame.
+     */
     public void update() {
     }
 
+    /**
+     * Renders game objects per frame.
+     */
     public void render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Post-loop
+    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Disposes a resource, when it is not {@code null}.

@@ -2,8 +2,11 @@ pluginManagement {
     repositories {
         mavenCentral()
         gradlePluginPortal()
-        maven { url 'https://maven.aliyun.com/repository/public'}
+        maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
     }
 }
 rootProject.name = projName
+
+include('kotlin-support')
+project(':kotlin-support').projectDir = file('src/kotlin-support')

@@ -20,6 +20,8 @@ package union.xenfork.fe2d;
 
 /**
  * An interface similar to {@link AutoCloseable}, but doesn't throw an exception.
+ * <p>
+ * The subclasses of {@code Disposable} must be explicitly disposed.
  *
  * @author squid233
  * @since 0.1.0

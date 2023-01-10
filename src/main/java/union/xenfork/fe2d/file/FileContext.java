@@ -52,8 +52,9 @@ public sealed abstract class FileContext permits InternalFileContext {
     /**
      * Loads as binary from this file.
      *
-     * @param bufferSize the initial buffer size. defaults to {@link #DEFAULT_BUFFER_SIZE}.
+     * @param bufferSize the initial buffer size. defaults to {@value #DEFAULT_BUFFER_SIZE}.
      * @return the binary data.
+     * @see #loadBinary()
      */
     public abstract ByteBuffer loadBinary(long bufferSize);
 
@@ -61,6 +62,7 @@ public sealed abstract class FileContext permits InternalFileContext {
      * Loads as binary from this file.
      *
      * @return the binary data.
+     * @see #loadBinary(long)
      */
     public ByteBuffer loadBinary() {
         return loadBinary(DEFAULT_BUFFER_SIZE);

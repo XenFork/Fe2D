@@ -38,6 +38,15 @@ public final class VertexBuilder {
     public VertexBuilder() {
     }
 
+    /**
+     * Creates a vertex builder with the given buffer.
+     *
+     * @param buffer the buffer.
+     */
+    public VertexBuilder(ByteBuffer buffer) {
+        this.buffer = buffer;
+    }
+
     private void growBuffer(long grown) {
         if (buffer == null) {
             buffer = MemoryUtil.memCalloc((int) grown);

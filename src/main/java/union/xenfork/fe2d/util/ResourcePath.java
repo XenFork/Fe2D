@@ -40,7 +40,7 @@ public final class ResourcePath {
     /**
      * Creates a resource path with the given string that is separated with colon.
      * <p>
-     * When colon not found, {@link #DEFAULT_NAMESPACE default namespace} is used.
+     * When colon not found, {@value #DEFAULT_NAMESPACE} is used.
      *
      * @param path the path string, separated with '{@code :}'.
      */
@@ -74,6 +74,50 @@ public final class ResourcePath {
     }
 
     /**
+     * Converts to the file location.
+     *
+     * @param namespace the namespace.
+     * @param body      the body.
+     * @return the location string.
+     */
+    public static String toLocation(String namespace, String body) {
+        return namespace + '/' + body;
+    }
+
+    /**
+     * Converts to the file location with the given prefix.
+     *
+     * @param namespace the namespace.
+     * @param body      the body.
+     * @param prefix    the prefix of the file location.
+     * @return the location string.
+     */
+    public static String toLocation(String namespace, String body, String prefix) {
+        return prefix + '/' + toLocation(namespace, body);
+    }
+
+    /**
+     * Creates the location string for assets.
+     *
+     * @param namespace the namespace.
+     * @param body      the body.
+     * @return the location string.
+     */
+    public static String assets(String namespace, String body) {
+        return toLocation(namespace, body, ASSETS);
+    }
+
+    /**
+     * Creates the location string for assets.
+     *
+     * @param path the path string, separated with '{@code :}'.
+     * @return the location string.
+     */
+    public static String assets(String path) {
+        return new ResourcePath(path).toLocation(ASSETS);
+    }
+
+    /**
      * Gets the namespace.
      *
      * @return the namespace.
@@ -97,7 +141,7 @@ public final class ResourcePath {
      * @return the location string.
      */
     public String toLocation() {
-        return namespace + '/' + body;
+        return toLocation(namespace, body);
     }
 
     /**
@@ -107,7 +151,7 @@ public final class ResourcePath {
      * @return the location string.
      */
     public String toLocation(String prefix) {
-        return prefix + '/' + namespace + '/' + body;
+        return toLocation(namespace, body, prefix);
     }
 
     @Override

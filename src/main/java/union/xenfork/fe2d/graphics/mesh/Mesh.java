@@ -66,6 +66,16 @@ public final class Mesh implements Disposable {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     }
 
+    /**
+     * Creates a fixed mesh with the given vertices and indices.
+     *
+     * @param consumer    the vertex builder.
+     * @param vertexCount the vertex count.
+     * @param indices     the indices.
+     * @param indexCount  the index count.
+     * @param layout      the vertex layout.
+     * @return the mesh.
+     */
     public static Mesh fixed(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, int indexCount, VertexLayout layout) {
         VertexBuilder vertexBuilder = new VertexBuilder();
         consumer.accept(vertexBuilder);
@@ -96,10 +106,27 @@ public final class Mesh implements Disposable {
         return mesh;
     }
 
+    /**
+     * Creates a fixed mesh with the given vertices and indices.
+     *
+     * @param consumer    the vertex builder.
+     * @param vertexCount the vertex count.
+     * @param indices     the indices.
+     * @param layout      the vertex layout.
+     * @return the mesh.
+     */
     public static Mesh fixed(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, VertexLayout layout) {
         return fixed(consumer, vertexCount, indices, indices.length, layout);
     }
 
+    /**
+     * Creates a dynamic mesh with the given layout.
+     *
+     * @param layout      the vertex layout.
+     * @param vertexCount the initial vertex count.
+     * @param indexCount  the initial index count.
+     * @return the mesh.
+     */
     public static Mesh dynamic(VertexLayout layout, int vertexCount, int indexCount) {
         Mesh mesh = new Mesh(false, layout, null, null, vertexCount, indexCount);
         layout.forEachAttribute((attribute, index) -> glEnableVertexAttribArray(index));
@@ -108,6 +135,12 @@ public final class Mesh implements Disposable {
         return mesh;
     }
 
+    /**
+     * Creates a dynamic mesh with the given layout.
+     *
+     * @param layout the vertex layout.
+     * @return the mesh.
+     */
     public static Mesh dynamic(VertexLayout layout) {
         return dynamic(layout, 0, 0);
     }
@@ -116,27 +149,45 @@ public final class Mesh implements Disposable {
         if (fixed) throw new IllegalStateException("Can't modify the data of a fixed mesh!");
     }
 
+    /**
+     * Sets the vertex count. Only dynamic mesh.
+     *
+     * @param vertexCount the new vertex count.
+     */
     public void setVertexCount(int vertexCount) {
         checkDynamic();
         this.vertexCount = vertexCount;
     }
 
+    /**
+     * Sets the index count. Only dynamic mesh.
+     *
+     * @param indexCount the new index count.
+     */
     public void setIndexCount(int indexCount) {
         checkDynamic();
         this.indexCount = indexCount;
     }
 
+    /**
+     * Sets the vertices. Only dynamic mesh.
+     *
+     * @param consumer the new vertices.
+     */
     public void setVertices(Consumer<VertexBuilder> consumer) {
         checkDynamic();
-        VertexBuilder builder = new VertexBuilder();
+        VertexBuilder builder = new VertexBuilder(vertexBuffer);
         consumer.accept(builder);
         ByteBuffer newVertexBuffer = builder.buffer();
+        long oldCapacity = vertexBuffer == null ? 0 : vertexBuffer.capacity();
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         // size not enough
-        if (vertexBuffer == null || builder.position() > vertexBuffer.capacity()) {
-            memFree(vertexBuffer);
-            vertexBuffer = newVertexBuffer;
+        if (builder.position() > oldCapacity) {
+            if (vertexBuffer != newVertexBuffer) {
+                memFree(vertexBuffer);
+                vertexBuffer = newVertexBuffer;
+            }
             int currBinding = GLStateManager.vertexArrayBinding();
             GLStateManager.bindVertexArray(vao);
             nglBufferData(GL_ARRAY_BUFFER, builder.position(), memAddress(vertexBuffer), GL_DYNAMIC_DRAW);
@@ -150,15 +201,17 @@ public final class Mesh implements Disposable {
             );
             GLStateManager.bindVertexArray(currBinding);
         } else {
-            for (long i = 0; i < builder.position(); i++) {
-                vertexBuffer.put((int) i, newVertexBuffer.get((int) i));
-            }
-            memFree(newVertexBuffer);
+            vertexBuffer = newVertexBuffer;
             nglBufferSubData(GL_ARRAY_BUFFER, 0, builder.position(), memAddress(vertexBuffer));
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
+    /**
+     * Sets the indices. Only dynamic mesh.
+     *
+     * @param indices the new indices.
+     */
     public void setIndices(int... indices) {
         checkDynamic();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -178,6 +231,12 @@ public final class Mesh implements Disposable {
         }
     }
 
+    /**
+     * Renders this mesh with the given primitive mode.
+     *
+     * @param primitiveMode the kind of primitives being constructed.
+     * @see #render()
+     */
     public void render(int primitiveMode) {
         int currBinding = GLStateManager.vertexArrayBinding();
         GLStateManager.bindVertexArray(vao);
@@ -185,14 +244,47 @@ public final class Mesh implements Disposable {
         GLStateManager.bindVertexArray(currBinding);
     }
 
+    /**
+     * Renders this mesh.
+     *
+     * @see #render(int)
+     */
     public void render() {
         render(GL_TRIANGLES);
     }
 
+    /**
+     * Gets the vertex buffer for direct operation.
+     *
+     * @return the vertex buffer.
+     */
+    public ByteBuffer vertexBuffer() {
+        return vertexBuffer;
+    }
+
+    /**
+     * Gets the index buffer for direct operation.
+     *
+     * @return the index buffer.
+     */
+    public IntBuffer indexBuffer() {
+        return indexBuffer;
+    }
+
+    /**
+     * Gets the vertex count.
+     *
+     * @return the vertex count.
+     */
     public int vertexCount() {
         return vertexCount;
     }
 
+    /**
+     * Gets the index count.
+     *
+     * @return the index count.
+     */
     public int indexCount() {
         return indexCount;
     }

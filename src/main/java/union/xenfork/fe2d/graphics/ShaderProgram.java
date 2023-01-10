@@ -31,6 +31,22 @@ import static org.lwjgl.opengl.GL20C.*;
 /**
  * The shader program with vertex and fragment shader.
  *
+ * <h2>Builtin Uniforms</h2>
+ * There are some builtin uniforms are available for conveniently setting values.
+ * <p>
+ * These uniforms are directly passed to the shader:
+ * <ul>
+ *     <li>{@value U_PROJECTION_MATRIX}</li>
+ *     <li>{@value U_VIEW_MATRIX}</li>
+ *     <li>{@value U_PROJECTION_VIEW_MATRIX}</li>
+ *     <li>{@value U_MODEL_MATRIX}</li>
+ *     <li>{@value U_PROJECTION_VIEW_MODEL_MATRIX}</li>
+ * </ul>
+ * These uniforms are passed with arguments:
+ * <ul>
+ *     <li>{@value U_SAMPLER}: required a texture unit number appended at the end of the uniform name</li>
+ * </ul>
+ *
  * @author squid233
  * @since 0.1.0
  */
@@ -39,6 +55,30 @@ public final class ShaderProgram implements Disposable {
      * The shader program with id 0.
      */
     public static final ShaderProgram ZERO = new ShaderProgram(0);
+    /**
+     * The name of the projection matrix uniform.
+     */
+    public static final String U_PROJECTION_MATRIX = "fe_ProjMatrix";
+    /**
+     * The name of the view matrix uniform.
+     */
+    public static final String U_VIEW_MATRIX = "fe_ViewMatrix";
+    /**
+     * The name of the projection view matrix uniform.
+     */
+    public static final String U_PROJECTION_VIEW_MATRIX = "fe_ProjViewMatrix";
+    /**
+     * The name of the model matrix uniform.
+     */
+    public static final String U_MODEL_MATRIX = "fe_ModelMatrix";
+    /**
+     * The name of the projection view model matrix uniform.
+     */
+    public static final String U_PROJECTION_VIEW_MODEL_MATRIX = "fe_ProjViewModelMatrix";
+    /**
+     * The name of the sampler uniform.
+     */
+    public static final String U_SAMPLER = "fe_Sampler";
     private final int id;
     private final Map<String, Integer> attributeIndexMap = new LinkedHashMap<>();
     private final Map<String, ShaderUniform> uniformMap = new HashMap<>();
@@ -55,6 +95,11 @@ public final class ShaderProgram implements Disposable {
         return shader;
     }
 
+    /**
+     * Creates the shader program with the given id.
+     *
+     * @param id the id.
+     */
     private ShaderProgram(int id) {
         this.id = id;
     }
@@ -157,6 +202,10 @@ public final class ShaderProgram implements Disposable {
         GLStateManager.useProgram(id);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Shader uniform
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Gets a uniform with the given name, or creates a new uniform if not found.
      *
@@ -185,9 +234,9 @@ public final class ShaderProgram implements Disposable {
      * @param value the value.
      */
     public void setUniform(String name, int value) {
-        getUniform(name, ShaderUniform.Type.INT)
-            .ifPresent(uniform -> uniform.markDirty().buffer
-                .putInt(0, value));
+        getUniform(name, ShaderUniform.Type.INT).orElseThrow()
+            .markDirty()
+            .buffer.putInt(0, value);
     }
 
     /**
@@ -200,9 +249,9 @@ public final class ShaderProgram implements Disposable {
      * @param w    the value w.
      */
     public void setUniform(String name, float x, float y, float z, float w) {
-        getUniform(name, ShaderUniform.Type.VEC4)
-            .ifPresent(uniform -> uniform.markDirty().buffer
-                .putFloat(0, x).putFloat(4, y).putFloat(8, z).putFloat(12, w));
+        getUniform(name, ShaderUniform.Type.VEC4).orElseThrow()
+            .markDirty()
+            .buffer.putFloat(0, x).putFloat(4, y).putFloat(8, z).putFloat(12, w);
     }
 
     /**
@@ -222,8 +271,65 @@ public final class ShaderProgram implements Disposable {
      * @param value the value.
      */
     public void setUniform(String name, Matrix4fc value) {
-        getUniform(name, ShaderUniform.Type.MAT4)
-            .ifPresent(uniform -> value.get(uniform.markDirty().buffer));
+        value.get(
+            getUniform(name, ShaderUniform.Type.MAT4).orElseThrow()
+                .markDirty()
+                .buffer
+        );
+    }
+
+    /**
+     * Sets the projection matrix uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setProjectionMatrix(Matrix4fc value) {
+        setUniform(U_PROJECTION_MATRIX, value);
+    }
+
+    /**
+     * Sets the view matrix uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setViewMatrix(Matrix4fc value) {
+        setUniform(U_VIEW_MATRIX, value);
+    }
+
+    /**
+     * Sets the projection view matrix uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setProjectionViewMatrix(Matrix4fc value) {
+        setUniform(U_PROJECTION_VIEW_MATRIX, value);
+    }
+
+    /**
+     * Sets the model matrix uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setModelMatrix(Matrix4fc value) {
+        setUniform(U_MODEL_MATRIX, value);
+    }
+
+    /**
+     * Sets the projection view model uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setProjectionViewModelMatrix(Matrix4fc value) {
+        setUniform(U_PROJECTION_VIEW_MODEL_MATRIX, value);
+    }
+
+    /**
+     * Adds a sampler uniform with the given unit.
+     *
+     * @param unit the sampler unit.
+     */
+    public void addSampler(int unit) {
+        setUniform(U_SAMPLER + unit, unit);
     }
 
     /**

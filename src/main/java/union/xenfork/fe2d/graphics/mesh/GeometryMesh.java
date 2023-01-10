@@ -16,24 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d;
+package union.xenfork.fe2d.graphics.mesh;
 
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+import union.xenfork.fe2d.graphics.VertexBuilder;
+import union.xenfork.fe2d.graphics.vertex.VertexLayout;
+
+import java.util.function.Consumer;
 
 /**
- * The global objects of Fork Engine 2D.
+ * The basic geometry figures creator.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
+public final class GeometryMesh {
     /**
-     * The file loader.
+     * Creates a quad mesh.
+     *
+     * @param consumer the vertices.
+     * @param layout   the vertex layout.
+     * @return the fixed mesh.
      */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
+    public static Mesh quad(Consumer<VertexBuilder> consumer, VertexLayout layout) {
+        return Mesh.fixed(consumer, 4, new int[]{0, 1, 2, 0, 2, 3}, layout);
+    }
 }

@@ -31,7 +31,7 @@ public final class GLStateManager {
     // Texture
     ///////////////////////////////////////////////////////////////////////////
 
-    private static int[] textureBinding2D = new int[glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)];
+    private static final int[] textureBinding2D = new int[glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)];
     private static int activeTexture = 0;
 
     /**

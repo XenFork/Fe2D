@@ -42,7 +42,7 @@ public final class ApplicationConfig {
      */
     public int windowHeight = 600;
     /**
-     * The window title overriding the {@link #applicationName application name} when it is not {@code null}.
+     * The window title. This option overrides {@link #applicationName}.
      */
     public String windowTitle = null;
 }

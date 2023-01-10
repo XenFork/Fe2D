@@ -39,7 +39,7 @@ public final class VertexLayout {
     /**
      * Creates the vertex layout.
      *
-     * @param program    the shader program.
+     * @param program    the shader program to be used when the attribute is shader defined.
      * @param attributes the vertex attributes.
      */
     public VertexLayout(@Nullable ShaderProgram program, VertexAttribute... attributes) {
@@ -56,15 +56,17 @@ public final class VertexLayout {
             } else if (attribute.shaderDefined()) {
                 index = Objects.requireNonNull(program, "program must not be null when attribute index is shader-defined!")
                     .getAttributeIndex(name);
-                if (index > nextIndex) {
+                if (index != -1 && index > nextIndex) {
                     nextIndex = index;
                 }
             } else {
                 index = nextIndex++;
             }
-            indexMap.put(name, index);
-            attributeMap.put(index, attribute);
-            pointerMap.put(index, (long) pointer);
+            if (index != -1) {
+                indexMap.put(name, index);
+                attributeMap.put(index, attribute);
+                pointerMap.put(index, (long) pointer);
+            }
             pointer += attribute.size() * attribute.type().bytesSize();
         }
         stride = pointer;

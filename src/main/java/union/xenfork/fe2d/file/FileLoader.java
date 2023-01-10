@@ -21,13 +21,16 @@ package union.xenfork.fe2d.file;
 import union.xenfork.fe2d.util.ResourcePath;
 
 /**
- * The file utilities.
+ * The file loader.
  *
  * @author squid233
  * @since 0.1.0
  */
 public final class FileLoader {
     private static final FileLoader INSTANCE = new FileLoader();
+
+    private FileLoader() {
+    }
 
     /**
      * Creates an internal file context with the given path.

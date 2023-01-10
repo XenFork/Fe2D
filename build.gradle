@@ -9,6 +9,8 @@ import org.gradle.internal.os.OperatingSystem
 
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
+rootProject.ext.lwjglDepends = ['', '-glfw', '-opengl', '-stb', '-jemalloc']
+
 group projGroupId
 archivesBaseName = projArtifactId
 version = projVersion
@@ -39,8 +41,6 @@ if (Boolean.parseBoolean(System.getProperty("project.bindAllNative"))) {
 }
 
 repositories {
-    // baka4n: Avoid repeatedly detecting dependencies from the server
-    mavenLocal()
     mavenCentral()
     maven { url 'https://maven.aliyun.com/repository/central' }
     // temporary maven repositories
@@ -59,7 +59,7 @@ dependencies {
     testCompileOnly 'org.slf4j:slf4j-simple:2.0.6'
 
     api platform("org.lwjgl:lwjgl-bom:3.3.1")
-    for (String depend in ['', '-glfw', '-opengl', '-stb', '-jemalloc']) {
+    for (String depend in lwjglDepends) {
         api "org.lwjgl:lwjgl$depend"
         for (String platform in lwjglNatives) {
             testRuntimeOnly "org.lwjgl:lwjgl$depend::natives-$platform"
@@ -117,8 +117,8 @@ javadoc {
 }
 
 publishing.publications {
-    it.register('mavenJava', MavenPublication) {
-        groupId = projGroupId as Publication
+    register('mavenJava', MavenPublication) {
+        groupId = projGroupId
         artifactId = projArtifactId
         version = projVersion
         description = projDesc
@@ -169,14 +169,6 @@ publishing.repositories {
         url = version.endsWith('-SNAPSHOT')
             ? "https://s01.oss.sonatype.org/content/repositories/snapshots/"
             : "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-    }
-    maven {
-        name = "GithubPackages"
-        url = uri("https://maven.pkg.github.com/$projVcs")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-        }
     }
 }
 

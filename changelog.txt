@@ -1,11 +1,20 @@
 0.1.0
 Added: Application, ApplicationConfig
 Added: VertexAttribute, VertexLayout
-Added: FileContext, FileUtils
+Added: FileContext
 Added: ShaderProgram, ShaderUniform
 Added: Color
 Added: VertexBuilder
 Added: Mesh
-Added: Texture
-Added: SpriteBatch
+Added: Texture, TextureAtlas
+Added: Graphics
+Added: Sprite, SpriteBatch
+
+Added: Input
 Added: Timer
+Added: AssetManager
+Added: FontBatch
+Added: Font, BitmapFont, Unifont, TrueTypeFont
+Added: Screen, Widget, Button
+Added: Configuration
+Added: Cache, BinaryCache
