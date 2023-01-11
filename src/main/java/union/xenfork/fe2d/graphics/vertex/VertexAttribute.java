@@ -131,6 +131,15 @@ public final class VertexAttribute {
     }
 
     /**
+     * Creates the vec2 position attribute.
+     *
+     * @return the vec2 position attribute selector.
+     */
+    public static Builtin position2() {
+        return new Builtin(POSITION_ATTRIB, 2, DataType.FLOAT, false);
+    }
+
+    /**
      * Creates the position attribute.
      *
      * @return the position attribute selector.

@@ -18,13 +18,31 @@
 
 package union.xenfork.fe2d.graphics.sprite;
 
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import union.xenfork.fe2d.graphics.Color;
+import union.xenfork.fe2d.graphics.texture.Texture;
+import union.xenfork.fe2d.graphics.texture.TextureRegion;
+import union.xenfork.fe2d.graphics.vertex.VertexAttribute;
+import union.xenfork.fe2d.graphics.vertex.VertexLayout;
+
 /**
- * The sprite, which contains a texture, position, anchor, rotation and scale.
+ * The sprite, which contains a texture, color and transformation.
  *
  * @author squid233
  * @since 0.1.0
  */
 public class Sprite {
+    /**
+     * The vertex layout.
+     */
+    public static final VertexLayout LAYOUT = new VertexLayout(
+        VertexAttribute.position2().getImplicit(),
+        VertexAttribute.colorPacked().getImplicit(),
+        VertexAttribute.texCoord(0).getImplicit()
+    );
     /**
      * The sprite vertex count.
      */
@@ -32,5 +50,72 @@ public class Sprite {
     /**
      * The sprite vertex size in bytes.
      */
-    public static final int SPRITE_SIZE = SPRITE_VERTEX * (3 * Float.BYTES + 4 * Byte.BYTES + 2 * Float.BYTES);
+    public static final int SPRITE_SIZE = SPRITE_VERTEX * (2 * Float.BYTES + 4 * Byte.BYTES + 2 * Float.BYTES);
+    /**
+     * The sprite texture.
+     */
+    public final Texture texture;
+    /**
+     * The sprite texture region.
+     */
+    public final TextureRegion textureRegion;
+    /**
+     * The sprite position.
+     */
+    public final Vector2f position = new Vector2f();
+    /**
+     * The sprite rotation anchor.
+     */
+    public final Vector3f anchor = new Vector3f();
+    /**
+     * The sprite rotation.
+     */
+    public final Quaternionf rotation = new Quaternionf();
+    /**
+     * The sprite size.
+     */
+    public final Vector2f size = new Vector2f();
+    /**
+     * The sprite scale size.
+     */
+    public final Vector2f scale = new Vector2f(1f);
+    /**
+     * The sprite color.
+     */
+    public Color color = Color.WHITE;
+    private final Matrix4f transform = new Matrix4f();
+
+    /**
+     * Creates a sprite with the given texture region.
+     *
+     * @param texture       the texture.
+     * @param textureRegion the texture region.
+     */
+    public Sprite(Texture texture, TextureRegion textureRegion) {
+        this.texture = texture;
+        this.textureRegion = textureRegion;
+        size.set(textureRegion.u1() - textureRegion.u0(), textureRegion.v1() - textureRegion.v0());
+    }
+
+    /**
+     * Creates a sprite.
+     *
+     * @param texture the texture.
+     */
+    public Sprite(Texture texture) {
+        this(texture, TextureRegion.full(texture));
+    }
+
+    /**
+     * Computes and gets the transformation.
+     *
+     * @return the transformation matrix.
+     */
+    public Matrix4f getTransform() {
+        return transform.translation(position.x(), position.y(), 0f)
+            .scale(scale.x(), scale.y(), 1f)
+            .translate(anchor.x(), anchor.y(), anchor.z())
+            .rotate(rotation)
+            .translate(-anchor.x(), -anchor.y(), -anchor.z());
+    }
 }

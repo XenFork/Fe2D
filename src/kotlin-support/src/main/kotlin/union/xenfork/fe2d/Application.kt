@@ -16,28 +16,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d;
-
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+package union.xenfork.fe2d
 
 /**
- * The global objects of Fork Engine 2D.
+ * The kotlin application configure.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
-    /**
-     * The file loader.
-     */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
-    /**
-     * The input.
-     */
-    public static Input input;
+class ApplicationKt : Application() {
+}
+
+/**
+ * Creates and launches an application with the given configuration.
+ */
+fun application(
+    useStderr: Boolean = false,
+    applicationName: String = "Fork Engine 2D Game",
+    windowWidth: Int = 800,
+    windowHeight: Int = 600,
+    windowTitle: String? = null,
+    block: ApplicationKt.() -> Unit
+) {
+    ApplicationKt().apply {
+        block()
+        launch(ApplicationConfig().also {
+            it.useStderr = useStderr
+            it.applicationName = applicationName
+            it.windowWidth = windowWidth
+            it.windowHeight = windowHeight
+            it.windowTitle = windowTitle
+        })
+    }
 }

@@ -21,8 +21,11 @@ package union.xenfork.fe2d.graphics.batch;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import union.xenfork.fe2d.Disposable;
+import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.ShaderProgram;
+import union.xenfork.fe2d.graphics.sprite.Sprite;
 import union.xenfork.fe2d.graphics.texture.Texture;
+import union.xenfork.fe2d.graphics.texture.TextureRegion;
 
 /**
  * The base batch.
@@ -32,17 +35,58 @@ import union.xenfork.fe2d.graphics.texture.Texture;
  */
 public interface Batch extends Disposable {
     void begin();
+
     void end();
+
     void flush();
-    void draw(Texture texture, float x, float y, Matrix4fc transform);
+
+    void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform);
+
+    void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1);
+
     void draw(Texture texture, float x, float y, float width, float height);
+
     void draw(Texture texture, float x, float y);
+
+    void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, Matrix4fc transform);
+
+    void draw(Texture texture, float x, float y, float width, float height, TextureRegion region);
+
+    void draw(Texture texture, float x, float y, TextureRegion region);
+
+    void draw(Sprite sprite);
+
     void setShader(ShaderProgram shader);
+
     ShaderProgram shader();
+
     Matrix4f projectionMatrix();
+
     Matrix4f modelMatrix();
+
     void setProjectionMatrix(Matrix4fc projectionMatrix);
+
     void setModelMatrix(Matrix4fc modelMatrix);
-    boolean drawing();
-    // TODO: 2023/1/10 Support blending
+
+    void setBlendDisabled(boolean blendDisabled);
+
+    void setBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+
+    void setBlendFunc(int srcFactor, int dstFactor);
+
+    default void setSpriteColor(Color color) {
+        setSpriteColor(color.packABGR());
+    }
+
+    default void setSpriteColor(float red, float green, float blue, float alpha) {
+        setSpriteColor(Color.rgbaPackABGR(red, green, blue, alpha));
+    }
+
+    void setSpriteColor(int packedColor);
+
+    int spriteColor();
+
+    boolean isBlendDisabled();
+
+    boolean isDrawing();
 }

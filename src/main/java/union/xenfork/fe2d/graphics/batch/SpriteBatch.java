@@ -19,12 +19,20 @@
 package union.xenfork.fe2d.graphics.batch;
 
 import org.jetbrains.annotations.Nullable;
+import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import union.xenfork.fe2d.Fe2D;
+import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.ShaderProgram;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
+import union.xenfork.fe2d.graphics.sprite.Sprite;
+import union.xenfork.fe2d.graphics.texture.Texture;
+import union.xenfork.fe2d.graphics.texture.TextureRegion;
 import union.xenfork.fe2d.graphics.vertex.VertexAttribute;
-import union.xenfork.fe2d.graphics.vertex.VertexLayout;
+
+import static org.lwjgl.opengl.GL11C.*;
+import static union.xenfork.fe2d.graphics.GLStateManager.*;
 
 /**
  * The sprite batch.
@@ -34,36 +42,44 @@ import union.xenfork.fe2d.graphics.vertex.VertexLayout;
  */
 public final class SpriteBatch implements Batch {
     /**
-     * The vertex layout.
-     */
-    public static final VertexLayout LAYOUT = new VertexLayout(
-        VertexAttribute.position().getImplicit(),
-        VertexAttribute.colorPacked().getImplicit(),
-        VertexAttribute.texCoord(0).getImplicit()
-    );
-    /**
      * The default value of max sprites.
      */
     public static final int DEFAULT_MAX_SPRITES = 1000;
     /**
      * The max sprites.
      */
-    public static final int MAX_SPRITES = Integer.MAX_VALUE / 6;
+    public static final int MAX_SPRITES = Integer.MAX_VALUE / Sprite.SPRITE_SIZE / Sprite.SPRITE_VERTEX;
+    private static final Matrix4fc IDENTITY_MAT = new Matrix4f();
     private final Mesh mesh;
+    private final int maxVertexBytesSize;
     private final Matrix4f projectionMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
     private final Matrix4f combinedMatrix = new Matrix4f();
     private final ShaderProgram shader;
     private ShaderProgram customShader;
     private final boolean ownsShader;
+    private int blendSrcRGB = GL_SRC_ALPHA;
+    private int blendDstRGB = GL_ONE_MINUS_SRC_ALPHA;
+    private int blendSrcAlpha = GL_SRC_ALPHA;
+    private int blendDstAlpha = GL_ONE_MINUS_SRC_ALPHA;
+    private boolean blendDisabled = false;
     private boolean drawing = false;
+    private int colorBits = Color.WHITE_BITS;
+    private int vertexBufferPos = 0;
+    private int drawnSpriteCount = 0;
+    private Texture texture;
+    private float invTexWidth, invTexHeight;
 
     public SpriteBatch(@Nullable ShaderProgram defaultShader, int maxSprites) {
-        // note: since 0x7FFFFFFF / 4 * 6 overflows, we use 0x7FFFFFFF / 6 as the max count.
-        int size = Math.min(maxSprites, MAX_SPRITES);
-        this.mesh = Mesh.dynamic(LAYOUT, size * 4, size * 6);
+        // note: since 0x7FFFFFFF / 4 * SPRITE_SIZE overflows,
+        // we use 0x7FFFFFFF / SPRITE_SIZE / SPRITE_VERTEX as the max count.
+        int size = Math.clamp(1, MAX_SPRITES, maxSprites);
+        this.mesh = Mesh.fixedSize(Sprite.LAYOUT, size * Sprite.SPRITE_VERTEX, size * 6);
+        this.maxVertexBytesSize = mesh.vertexCount() * Sprite.LAYOUT.stride();
         this.shader = defaultShader != null ? defaultShader : createDefaultShader();
         this.ownsShader = defaultShader == null;
+
+        projectionMatrix.setOrtho2D(0, Fe2D.graphics.width(), 0, Fe2D.graphics.height());
 
         int[] indices = new int[size * 6];
         for (int i = 0, j = 0; i < indices.length; i += 6, j += 4) {
@@ -74,7 +90,6 @@ public final class SpriteBatch implements Batch {
             indices[i + 4] = j + 3;
             indices[i + 5] = j;
         }
-        mesh.setIndexCount(indices.length);
         mesh.setIndices(indices);
     }
 
@@ -92,42 +107,194 @@ public final class SpriteBatch implements Batch {
 
     public static ShaderProgram createDefaultShader() {
         return new ShaderProgram(String.format("""
-                #version 150 core
-                in vec3 %1$s;
-                in vec4 %2$s;
-                in vec2 %3$s;
-                out vec4 vertexColor;
-                out vec2 UV0;
-                uniform mat4 %4$s;
-                void main() {
-                    gl_Position = %4$s * vec4(%1$s, 1.0);
-                    vertexColor = %2$s;
-                    UV0 = %3$s;
-                }
-                """, VertexAttribute.POSITION_ATTRIB,
-            VertexAttribute.COLOR_ATTRIB,
-            VertexAttribute.TEX_COORD_ATTRIB + '0',
-            ShaderProgram.U_PROJECTION_VIEW_MODEL_MATRIX),
-            String.format("""
-                #version 150 core
-                in vec4 vertexColor;
-                in vec2 UV0;
-                out vec4 FragColor;
-                uniform sampler2D %1$s;
-                void main() {
-                    FragColor = vertexColor * texture(%1$s, UV0);
-                }
-                """, ShaderProgram.U_SAMPLER + '0'),
-            LAYOUT);
+            #version 150 core
+            in vec2 %1$s;
+            in vec4 %2$s;
+            in vec2 %3$s;
+            out vec4 vertexColor;
+            out vec2 UV0;
+            uniform mat4 %4$s;
+            void main() {
+                gl_Position = %4$s * vec4(%1$s, 0.0, 1.0);
+                vertexColor = %2$s;
+                UV0 = %3$s;
+            }
+            """, VertexAttribute.POSITION_ATTRIB, VertexAttribute.COLOR_ATTRIB, VertexAttribute.TEX_COORD_ATTRIB + '0', ShaderProgram.U_PROJECTION_VIEW_MODEL_MATRIX
+        ), String.format("""
+            #version 150 core
+            in vec4 vertexColor;
+            in vec2 UV0;
+            out vec4 FragColor;
+            uniform sampler2D %1$s;
+            void main() {
+                FragColor = vertexColor * texture(%1$s, UV0);
+            }
+            """, ShaderProgram.U_SAMPLER + '0'),
+            Sprite.LAYOUT);
+    }
+
+    @Override
+    public void begin() {
+        if (drawing) throw new IllegalStateException("Cannot call SpriteBatch.begin while drawing");
+        drawing = true;
+        vertexBufferPos = 0;
+        texture = null;
+    }
+
+    @Override
+    public void end() {
+        if (!drawing) throw new IllegalStateException("Can only call SpriteBatch.end while drawing");
+        drawing = false;
+        flush();
+    }
+
+    @Override
+    public void flush() {
+        mesh.updateVertices(vertexBufferPos);
+        int currPrg = currentProgram();
+        int currTex = textureBinding2D();
+        boolean blend = isBlendEnabled();
+        int sRGB = blendSrcRGB();
+        int dRGB = blendDstRGB();
+        int sAlpha = blendSrcAlpha();
+        int dAlpha = blendDstAlpha();
+        if (blendDisabled && blend) {
+            disableBlend();
+        } else if (!blendDisabled) {
+            if (!blend) {
+                enableBlend();
+            }
+            blendFuncSeparate(blendSrcRGB, blendDstRGB, blendSrcAlpha, blendDstAlpha);
+        }
+        if (customShader != null) {
+            customShader.use();
+        } else {
+            shader.use();
+        }
+        setupMatrices();
+        texture.bind();
+        mesh.render(GL_TRIANGLES, drawnSpriteCount * 6);
+        bindTexture2D(currTex);
+        drawnSpriteCount = 0;
+        vertexBufferPos = 0;
+        useProgram(currPrg);
+        if (blendDisabled && blend) {
+            enableBlend();
+        } else if (!blendDisabled) {
+            if (!blend) {
+                disableBlend();
+            }
+            blendFuncSeparate(sRGB, dRGB, sAlpha, dAlpha);
+        }
+    }
+
+    private void checkDrawing() {
+        if (!drawing)
+            throw new IllegalStateException("Can only call SpriteBatch.draw between begin and end (while drawing)");
+    }
+
+    private void switchTexture(Texture newTexture) {
+        if (texture != null) {
+            if (newTexture == texture) return;
+            flush();
+        }
+        texture = newTexture;
+        invTexWidth = 1f / newTexture.width();
+        invTexHeight = 1f / newTexture.height();
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform) {
+        checkDrawing();
+        switchTexture(texture);
+        if (vertexBufferPos == maxVertexBytesSize) flush();
+
+        float x0, y0, x1, y1;
+        if ((transform.properties() & Matrix4fc.PROPERTY_IDENTITY) != 0) {
+            x0 = x;
+            y0 = y;
+            x1 = x + width;
+            y1 = y + height;
+        } else {
+            x0 = Math.fma(transform.m00(), x, Math.fma(transform.m10(), y, transform.m30()));
+            y0 = Math.fma(transform.m01(), x, Math.fma(transform.m11(), y, transform.m31()));
+            x1 = Math.fma(transform.m00(), x + width, Math.fma(transform.m10(), y + height, transform.m30()));
+            y1 = Math.fma(transform.m01(), x + width, Math.fma(transform.m11(), y + height, transform.m31()));
+        }
+
+        mesh.vertexBuffer()
+            // left-top
+            .putFloat(vertexBufferPos, x0).putFloat(vertexBufferPos + 4, y1)
+            .putInt(vertexBufferPos + 8, colorBits)
+            .putFloat(vertexBufferPos + 12, u0).putFloat(vertexBufferPos + 16, v0)
+            // left-bottom
+            .putFloat(vertexBufferPos + 20, x0).putFloat(vertexBufferPos + 24, y0)
+            .putInt(vertexBufferPos + 28, colorBits)
+            .putFloat(vertexBufferPos + 32, u0).putFloat(vertexBufferPos + 36, v1)
+            // right-bottom
+            .putFloat(vertexBufferPos + 40, x1).putFloat(vertexBufferPos + 44, y0)
+            .putInt(vertexBufferPos + 48, colorBits)
+            .putFloat(vertexBufferPos + 52, u1).putFloat(vertexBufferPos + 56, v1)
+            // right-top
+            .putFloat(vertexBufferPos + 60, x1).putFloat(vertexBufferPos + 64, y1)
+            .putInt(vertexBufferPos + 68, colorBits)
+            .putFloat(vertexBufferPos + 72, u1).putFloat(vertexBufferPos + 76, v0);
+        vertexBufferPos += Sprite.SPRITE_SIZE;
+        drawnSpriteCount++;
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
+        draw(texture, x, y, width, height, u0, v0, u1, v1, IDENTITY_MAT);
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height) {
+        draw(texture, x, y, width, height, 0f, 0f, 1f, 1f);
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y) {
+        draw(texture, x, y, texture.width(), texture.height());
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, Matrix4fc transform) {
+        draw(texture, x, y, width, height,
+            region.u0() * invTexWidth, region.v0() * invTexHeight,
+            region.u1() * invTexWidth, region.v1() * invTexHeight,
+            transform);
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, TextureRegion region) {
+        draw(texture, x, y, width, height, region, IDENTITY_MAT);
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, TextureRegion region) {
+        draw(texture, x, y, region.u1() - region.u0(), region.v1() - region.v0(), region);
+    }
+
+    @Override
+    public void draw(Sprite sprite) {
+        int currColor = spriteColor();
+        setSpriteColor(sprite.color);
+        draw(sprite.texture,
+            0f, 0f,
+            sprite.size.x(), sprite.size.y(),
+            sprite.textureRegion,
+            sprite.getTransform());
+        setSpriteColor(currColor);
     }
 
     private void setupMatrices() {
         projectionMatrix.mul(modelMatrix, combinedMatrix);
         if (customShader != null) {
-            customShader.setUniform(ShaderProgram.U_PROJECTION_VIEW_MODEL_MATRIX, combinedMatrix);
+            customShader.setProjectionViewModelMatrix(combinedMatrix);
             customShader.uploadUniforms();
         } else {
-            shader.setUniform(ShaderProgram.U_PROJECTION_VIEW_MODEL_MATRIX, combinedMatrix);
+            shader.setProjectionViewModelMatrix(combinedMatrix);
             shader.uploadUniforms();
         }
     }
@@ -177,14 +344,49 @@ public final class SpriteBatch implements Batch {
     }
 
     @Override
-    public boolean drawing() {
+    public void setBlendDisabled(boolean blendDisabled) {
+        if (drawing) flush();
+        this.blendDisabled = blendDisabled;
+    }
+
+    @Override
+    public void setBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
+        if (drawing && !blendDisabled) flush();
+        blendSrcRGB = srcRGB;
+        blendDstRGB = dstRGB;
+        blendSrcAlpha = srcAlpha;
+        blendDstAlpha = dstAlpha;
+    }
+
+    @Override
+    public void setBlendFunc(int srcFactor, int dstFactor) {
+        setBlendFuncSeparate(srcFactor, dstFactor, srcFactor, dstFactor);
+    }
+
+    @Override
+    public void setSpriteColor(int packedColor) {
+        this.colorBits = packedColor;
+    }
+
+    @Override
+    public int spriteColor() {
+        return colorBits;
+    }
+
+    @Override
+    public boolean isBlendDisabled() {
+        return blendDisabled;
+    }
+
+    @Override
+    public boolean isDrawing() {
         return drawing;
     }
 
     @Override
     public void dispose() {
         mesh.dispose();
-        if (ownsShader&&shader!=null) {
+        if (ownsShader && shader != null) {
             shader.dispose();
         }
     }

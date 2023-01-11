@@ -26,10 +26,42 @@ package union.xenfork.fe2d.graphics;
  */
 public final class Color {
     /**
+     * white
+     */
+    public static final Color WHITE = new Color(0xffffffff);
+    /**
      * The packed white color bits.
      */
     public static final int WHITE_BITS = rgbaPackABGR(1f, 1f, 1f, 1f);
     private static final float INV_BYTE_TO_FLOAT = 1.0f / 255.0f;
+    private final byte r, g, b, a;
+
+    /**
+     * Creates the color with the given integer packed in ARGB.
+     *
+     * @param argb the color.
+     */
+    public Color(int argb) {
+        this.r = (byte) (argb >>> 16);
+        this.g = (byte) (argb >>> 8);
+        this.b = (byte) argb;
+        this.a = (byte) (argb >>> 24);
+    }
+
+    /**
+     * Creates the color with the given components.
+     *
+     * @param r the red component.
+     * @param g the green component.
+     * @param b the blue component.
+     * @param a the alpha component.
+     */
+    public Color(float r, float g, float b, float a) {
+        this.r = floatToByte(r);
+        this.g = floatToByte(g);
+        this.b = floatToByte(b);
+        this.a = floatToByte(a);
+    }
 
     /**
      * Converts the normalized color to unsigned byte.
@@ -52,7 +84,7 @@ public final class Color {
     }
 
     /**
-     * Packs the color into an integer.
+     * Packs the RGBA color into an integer.
      *
      * @param r the red value.
      * @param g the green value.
@@ -68,7 +100,7 @@ public final class Color {
     }
 
     /**
-     * Packs the color into an integer.
+     * Packs the RGBA color into an integer.
      *
      * @param r the red value.
      * @param g the green value.
@@ -118,5 +150,50 @@ public final class Color {
      */
     public static byte getAlphaFromABGR(int color) {
         return (byte) (color >>> 24);
+    }
+
+    /**
+     * Packs this color into an integer.
+     *
+     * @return the packed value in ABGR.
+     */
+    public int packABGR() {
+        return rgbaPackABGR(r, g, b, a);
+    }
+
+    /**
+     * Gets the red component.
+     *
+     * @return the red component.
+     */
+    public byte red() {
+        return r;
+    }
+
+    /**
+     * Gets the green component.
+     *
+     * @return the green component.
+     */
+    public byte green() {
+        return g;
+    }
+
+    /**
+     * Gets the blue component.
+     *
+     * @return the blue component.
+     */
+    public byte blue() {
+        return b;
+    }
+
+    /**
+     * Gets the alpha component.
+     *
+     * @return the alpha component.
+     */
+    public byte alpha() {
+        return a;
     }
 }

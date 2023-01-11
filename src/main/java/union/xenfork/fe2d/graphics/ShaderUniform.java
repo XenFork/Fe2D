@@ -66,10 +66,11 @@ public final class ShaderUniform implements Disposable {
             return;
         }
         dirty = false;
-        if (program != null && GLStateManager.currentProgram() != program.id()) {
+        int currPrg = GLStateManager.currentProgram();
+        boolean arb = program != null && GL.getCapabilities().GL_ARB_separate_shader_objects;
+        if (!arb && program != null) {
             GLStateManager.useProgram(program.id());
         }
-        boolean arb = program != null && GL.getCapabilities().GL_ARB_separate_shader_objects;
         switch (type) {
             case INT -> {
                 if (arb) glProgramUniform1i(program.id(), location, buffer.getInt(0));
@@ -83,6 +84,9 @@ public final class ShaderUniform implements Disposable {
                 if (arb) nglProgramUniformMatrix4fv(program.id(), location, 1, false, memAddress(buffer));
                 else nglUniformMatrix4fv(location, 1, false, memAddress(buffer));
             }
+        }
+        if (!arb) {
+            GLStateManager.useProgram(currPrg);
         }
     }
 

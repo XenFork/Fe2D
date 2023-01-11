@@ -18,6 +18,8 @@
 
 package union.xenfork.fe2d.graphics;
 
+import org.lwjgl.opengl.GL11C;
+
 import static org.lwjgl.opengl.GL30C.*;
 
 /**
@@ -28,6 +30,112 @@ import static org.lwjgl.opengl.GL30C.*;
  */
 public final class GLStateManager {
     ///////////////////////////////////////////////////////////////////////////
+    // Blend
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static boolean blend = false;
+    private static int blendSrcRGB = GL_ONE;
+    private static int blendDstRGB = GL_ZERO;
+    private static int blendSrcAlpha = GL_ONE;
+    private static int blendDstAlpha = GL_ZERO;
+
+    /**
+     * Determines if {@link GL11C#GL_BLEND GL_BLEND} is currently enabled (as with {@link #enableBlend() Enable}) or disabled.
+     *
+     * @return If enabled, blend the computed fragment color values with the values in the color buffers.
+     */
+    public static boolean isBlendEnabled() {
+        return blend;
+    }
+
+    /**
+     * Returns one value, the symbolic constant identifying the RGB source blend function. The initial value is {@code GL_ONE}.
+     *
+     * @return one value, the symbolic constant identifying the RGB source blend function. The initial value is {@code GL_ONE}.
+     */
+    public static int blendSrcRGB() {
+        return blendSrcRGB;
+    }
+
+    /**
+     * Returns one value, the symbolic constant identifying the RGB destination blend function. The initial value is {@code GL_ZERO}.
+     *
+     * @return one value, the symbolic constant identifying the RGB destination blend function. The initial value is {@code GL_ZERO}.
+     */
+    public static int blendDstRGB() {
+        return blendDstRGB;
+    }
+
+    /**
+     * Returns one value, the symbolic constant identifying the alpha source blend function. The initial value is {@code GL_ONE}.
+     *
+     * @return one value, the symbolic constant identifying the alpha source blend function. The initial value is {@code GL_ONE}.
+     */
+    public static int blendSrcAlpha() {
+        return blendSrcAlpha;
+    }
+
+    /**
+     * Returns one value, the symbolic constant identifying the alpha destination blend function. The initial value is {@code GL_ZERO}.
+     *
+     * @return one value, the symbolic constant identifying the alpha destination blend function. The initial value is {@code GL_ZERO}.
+     */
+    public static int blendDstAlpha() {
+        return blendDstAlpha;
+    }
+
+    /**
+     * Enables blend.
+     */
+    public static void enableBlend() {
+        if (!blend) {
+            blend = true;
+            glEnable(GL_BLEND);
+        }
+    }
+
+    /**
+     * Disables blend.
+     */
+    public static void disableBlend() {
+        if (blend) {
+            blend = false;
+            glDisable(GL_BLEND);
+        }
+    }
+
+    /**
+     * Specifies pixel arithmetic for RGB and alpha components separately.
+     *
+     * @param sfactorRGB   how the red, green, and blue blending factors are computed. The initial value is GL_ONE.
+     * @param dfactorRGB   how the red, green, and blue destination blending factors are computed. The initial value is GL_ZERO.
+     * @param sfactorAlpha how the alpha source blending factor is computed. The initial value is GL_ONE.
+     * @param dfactorAlpha how the alpha destination blending factor is computed. The initial value is GL_ZERO.
+     */
+    public static void blendFuncSeparate(int sfactorRGB, int dfactorRGB, int sfactorAlpha, int dfactorAlpha) {
+        if (blendSrcRGB != sfactorRGB ||
+            blendDstRGB != dfactorRGB ||
+            blendSrcAlpha != sfactorAlpha ||
+            blendDstAlpha != dfactorAlpha) {
+            blendSrcRGB = sfactorRGB;
+            blendDstRGB = dfactorRGB;
+            blendSrcAlpha = sfactorAlpha;
+            blendDstAlpha = dfactorAlpha;
+            glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
+        }
+    }
+
+    /**
+     * Specifies the weighting factors used by the blend equation, for both RGB and alpha functions and for all draw buffers.
+     *
+     * @param sfactor the source weighting factor.
+     * @param dfactor the destination weighting factor.
+     */
+    public static void blendFunc(int sfactor, int dfactor) {
+        blendFuncSeparate(sfactor, dfactor, sfactor, dfactor);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Texture
     ///////////////////////////////////////////////////////////////////////////
 
@@ -35,9 +143,9 @@ public final class GLStateManager {
     private static int activeTexture = 0;
 
     /**
-     * Returns a single value, the name of the texture currently bound to the target {@link org.lwjgl.opengl.GL11C#GL_TEXTURE_2D GL_TEXTURE_2D}.
+     * Returns a single value, the name of the texture currently bound to the target {@link GL11C#GL_TEXTURE_2D GL_TEXTURE_2D}.
      *
-     * @return a single value, the name of the texture currently bound to the target {@link org.lwjgl.opengl.GL11C#GL_TEXTURE_2D GL_TEXTURE_2D}.
+     * @return a single value, the name of the texture currently bound to the target {@link GL11C#GL_TEXTURE_2D GL_TEXTURE_2D}.
      */
     public static int textureBinding2D() {
         return textureBinding2D[activeTexture];

@@ -37,19 +37,23 @@ import static org.lwjgl.system.MemoryUtil.*;
  * @since 0.1.0
  */
 public final class Mesh implements Disposable {
+    private final boolean immutable;
     private final boolean fixed;
     private final VertexLayout layout;
     private ByteBuffer vertexBuffer;
     private IntBuffer indexBuffer;
     private int vertexCount, indexCount;
     private final int vao, vbo, ebo;
+    private int defaultDrawMode = GL_TRIANGLES;
 
-    private Mesh(boolean fixed,
+    private Mesh(boolean immutable,
+                 boolean fixed,
                  VertexLayout layout,
                  ByteBuffer vertexBuffer,
                  IntBuffer indexBuffer,
                  int vertexCount,
                  int indexCount) {
+        this.immutable = immutable;
         this.fixed = fixed;
         this.layout = layout;
         this.vertexBuffer = vertexBuffer;
@@ -67,7 +71,7 @@ public final class Mesh implements Disposable {
     }
 
     /**
-     * Creates a fixed mesh with the given vertices and indices.
+     * Creates an immutable mesh with the given vertices and indices.
      *
      * @param consumer    the vertex builder.
      * @param vertexCount the vertex count.
@@ -76,7 +80,7 @@ public final class Mesh implements Disposable {
      * @param layout      the vertex layout.
      * @return the mesh.
      */
-    public static Mesh fixed(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, int indexCount, VertexLayout layout) {
+    public static Mesh immutable(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, int indexCount, VertexLayout layout) {
         VertexBuilder vertexBuilder = new VertexBuilder();
         consumer.accept(vertexBuilder);
         ByteBuffer vertexBuffer = vertexBuilder.buffer();
@@ -86,7 +90,11 @@ public final class Mesh implements Disposable {
             indexBuffer.put(index);
         }
 
-        Mesh mesh = new Mesh(true, layout, vertexBuffer, indexBuffer.flip(), vertexCount, indexCount);
+        Mesh mesh = new Mesh(true, true,
+            layout,
+            vertexBuffer,
+            indexBuffer.flip(),
+            vertexCount, indexCount);
 
         glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
         layout.forEachAttribute((attribute, index) -> {
@@ -107,7 +115,7 @@ public final class Mesh implements Disposable {
     }
 
     /**
-     * Creates a fixed mesh with the given vertices and indices.
+     * Creates an immutable mesh with the given vertices and indices.
      *
      * @param consumer    the vertex builder.
      * @param vertexCount the vertex count.
@@ -115,8 +123,38 @@ public final class Mesh implements Disposable {
      * @param layout      the vertex layout.
      * @return the mesh.
      */
-    public static Mesh fixed(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, VertexLayout layout) {
-        return fixed(consumer, vertexCount, indices, indices.length, layout);
+    public static Mesh immutable(Consumer<VertexBuilder> consumer, int vertexCount, int[] indices, VertexLayout layout) {
+        return immutable(consumer, vertexCount, indices, indices.length, layout);
+    }
+
+    /**
+     * Creates a fixed-size mesh with the given layout.
+     *
+     * @param layout      the vertex layout.
+     * @param vertexCount the vertex count.
+     * @param indexCount  the index count.
+     * @return the mesh.
+     */
+    public static Mesh fixedSize(VertexLayout layout, int vertexCount, int indexCount) {
+        Mesh mesh = new Mesh(false, true,
+            layout,
+            memCalloc(vertexCount * layout.stride()),
+            memCallocInt(indexCount),
+            vertexCount, indexCount);
+        glBufferData(GL_ARRAY_BUFFER, mesh.vertexBuffer, GL_DYNAMIC_DRAW);
+        layout.forEachAttribute((attribute, index) -> {
+            glEnableVertexAttribArray(index);
+            glVertexAttribPointer(index,
+                attribute.size(),
+                attribute.type().typeEnum(),
+                attribute.normalized(),
+                layout.stride(),
+                layout.getPointer(index));
+        });
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBuffer, GL_DYNAMIC_DRAW);
+        GLStateManager.bindVertexArray(0);
+        return mesh;
     }
 
     /**
@@ -128,7 +166,11 @@ public final class Mesh implements Disposable {
      * @return the mesh.
      */
     public static Mesh dynamic(VertexLayout layout, int vertexCount, int indexCount) {
-        Mesh mesh = new Mesh(false, layout, null, null, vertexCount, indexCount);
+        Mesh mesh = new Mesh(false, false,
+            layout,
+            null,
+            null,
+            vertexCount, indexCount);
         layout.forEachAttribute((attribute, index) -> glEnableVertexAttribArray(index));
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         GLStateManager.bindVertexArray(0);
@@ -145,37 +187,41 @@ public final class Mesh implements Disposable {
         return dynamic(layout, 0, 0);
     }
 
-    private void checkDynamic() {
-        if (fixed) throw new IllegalStateException("Can't modify the data of a fixed mesh!");
+    private void checkGrowable() {
+        if (fixed) throw new IllegalStateException("Can't modify the buffer count of a fixed-size mesh!");
+    }
+
+    private void checkMutable() {
+        if (immutable) throw new IllegalStateException("Can't modify the data of an immutable mesh!");
     }
 
     /**
-     * Sets the vertex count. Only dynamic mesh.
+     * Sets the vertex count. Only growable mesh.
      *
      * @param vertexCount the new vertex count.
      */
     public void setVertexCount(int vertexCount) {
-        checkDynamic();
+        checkGrowable();
         this.vertexCount = vertexCount;
     }
 
     /**
-     * Sets the index count. Only dynamic mesh.
+     * Sets the index count. Only growable mesh.
      *
      * @param indexCount the new index count.
      */
     public void setIndexCount(int indexCount) {
-        checkDynamic();
+        checkGrowable();
         this.indexCount = indexCount;
     }
 
     /**
-     * Sets the vertices. Only dynamic mesh.
+     * Sets the vertices. Only mutable mesh.
      *
      * @param consumer the new vertices.
      */
     public void setVertices(Consumer<VertexBuilder> consumer) {
-        checkDynamic();
+        checkMutable();
         VertexBuilder builder = new VertexBuilder(vertexBuffer);
         consumer.accept(builder);
         ByteBuffer newVertexBuffer = builder.buffer();
@@ -184,6 +230,7 @@ public final class Mesh implements Disposable {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         // size not enough
         if (builder.position() > oldCapacity) {
+            checkGrowable();
             if (vertexBuffer != newVertexBuffer) {
                 memFree(vertexBuffer);
                 vertexBuffer = newVertexBuffer;
@@ -208,15 +255,28 @@ public final class Mesh implements Disposable {
     }
 
     /**
-     * Sets the indices. Only dynamic mesh.
+     * Updates the vertices.
+     *
+     * @param size the size in bytes to update.
+     */
+    public void updateVertices(int size) {
+        checkMutable();
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        nglBufferSubData(GL_ARRAY_BUFFER, 0, size, memAddress(vertexBuffer));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    /**
+     * Sets the indices. Only mutable mesh.
      *
      * @param indices the new indices.
      */
     public void setIndices(int... indices) {
-        checkDynamic();
+        checkMutable();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         // size not enough
         if (indexBuffer == null || indices.length > indexBuffer.capacity()) {
+            checkGrowable();
             indexBuffer = memRealloc(indexBuffer, indices.length);
             for (int index : indices) {
                 indexBuffer.put(index);
@@ -232,12 +292,14 @@ public final class Mesh implements Disposable {
     }
 
     /**
-     * Renders this mesh with the given primitive mode.
+     * Renders this mesh with the given primitive mode and index count.
      *
      * @param primitiveMode the kind of primitives being constructed.
+     * @param indexCount    the number of vertices to transfer to the GL.
+     * @see #render(int)
      * @see #render()
      */
-    public void render(int primitiveMode) {
+    public void render(int primitiveMode, int indexCount) {
         int currBinding = GLStateManager.vertexArrayBinding();
         GLStateManager.bindVertexArray(vao);
         glDrawElements(primitiveMode, indexCount, GL_UNSIGNED_INT, 0);
@@ -245,12 +307,42 @@ public final class Mesh implements Disposable {
     }
 
     /**
-     * Renders this mesh.
+     * Renders this mesh with the given primitive mode.
      *
+     * @param primitiveMode the kind of primitives being constructed.
+     * @see #render(int, int)
+     * @see #render()
+     */
+    public void render(int primitiveMode) {
+        render(primitiveMode, indexCount);
+    }
+
+    /**
+     * Renders this mesh as triangles.
+     *
+     * @see #render(int, int)
      * @see #render(int)
      */
     public void render() {
-        render(GL_TRIANGLES);
+        render(defaultDrawMode);
+    }
+
+    /**
+     * Sets the default draw mode.
+     *
+     * @param defaultDrawMode the default draw mode.
+     */
+    public void setDefaultDrawMode(int defaultDrawMode) {
+        this.defaultDrawMode = defaultDrawMode;
+    }
+
+    /**
+     * Gets the default draw mode.
+     *
+     * @return the default draw mode.
+     */
+    public int defaultDrawMode() {
+        return defaultDrawMode;
     }
 
     /**

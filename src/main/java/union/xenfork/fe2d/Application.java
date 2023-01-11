@@ -108,10 +108,16 @@ public class Application implements Disposable {
                     throw new IllegalStateException("Failed to create the GLFW window");
                 }
                 try {
+                    Fe2D.input = new Input(window);
+
                     // Sets callbacks
                     glfwSetFramebufferSizeCallback(window, (handle, width, height) -> {
                         Fe2D.graphics.setSize(width, height);
                         onResize(width, height);
+                    });
+                    glfwSetCursorPosCallback(window, (handle, xpos, ypos) -> {
+                        Fe2D.input.updateCursorPos(xpos, ypos);
+                        onCursorPos(xpos, ypos);
                     });
 
                     // Makes center
@@ -132,7 +138,7 @@ public class Application implements Disposable {
                         IntBuffer ph = stack.callocInt(1);
                         glfwGetFramebufferSize(window, pw, ph);
                         Fe2D.graphics.setSize(pw.get(0), ph.get(0));
-                        onResize(pw.get(0), ph.get(0));
+                        glViewport(0, 0, pw.get(0), ph.get(0));
                     }
                     init();
 
@@ -160,13 +166,25 @@ public class Application implements Disposable {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * On framebuffer resizing.
+     * Will be called when the framebuffer of the specified window is resized.
      *
-     * @param width  the new width.
-     * @param height the new height.
+     * @param width  the new width, in pixels, of the framebuffer.
+     * @param height the new height, in pixels, of the framebuffer.
      */
     public void onResize(int width, int height) {
         glViewport(0, 0, width, height);
+    }
+
+    /**
+     * Will be called when the cursor is moved.
+     * <p>
+     * The callback function receives the cursor position, measured in screen coordinates but relative to the top-left corner
+     * of the window client area. On platforms that provide it, the full sub-pixel cursor position is passed on.
+     *
+     * @param posX the new cursor x-coordinate, relative to the left edge of the content area.
+     * @param posY the new cursor y-coordinate, relative to the top edge of the content area.
+     */
+    public void onCursorPos(double posX, double posY) {
     }
 
     ///////////////////////////////////////////////////////////////////////////

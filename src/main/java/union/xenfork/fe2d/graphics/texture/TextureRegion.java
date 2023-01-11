@@ -19,10 +19,23 @@
 package union.xenfork.fe2d.graphics.texture;
 
 /**
- * The texture region, which contains UV coordinate.
+ * The texture region, which contains non-normalized UV coordinate.
  *
+ * @param u0 the first U.
+ * @param v0 the first V.
+ * @param u1 the second U.
+ * @param v1 the second V.
  * @author squid233
  * @since 0.1.0
  */
-public record TextureRegion(float u0, float v0, float u1, float v1) {
+public record TextureRegion(int u0, int v0, int u1, int v1) {
+    /**
+     * Creates a texture region for full texture.
+     *
+     * @param texture the texture.
+     * @return the region.
+     */
+    public static TextureRegion full(Texture texture) {
+        return new TextureRegion(0, 0, texture.width(), texture.height());
+    }
 }

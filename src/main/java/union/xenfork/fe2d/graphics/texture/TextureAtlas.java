@@ -88,7 +88,7 @@ public class TextureAtlas extends Texture {
      * @see #load(Entry...)
      */
     @SuppressWarnings("unchecked")
-    public static TextureAtlas load(@Nullable Supplier<ByteBuffer> fail, @Nullable TextureParam param, Entry... entries) {
+    public static TextureAtlas load(@Nullable Supplier<@Nullable ByteBuffer> fail, @Nullable TextureParam param, Entry... entries) {
         // Uses array wrapper because lambda cannot modify outside variables
         ByteBuffer[] failBuffer = new ByteBuffer[1];
         List<Entry> entryRegion = new ArrayList<>();
@@ -154,7 +154,7 @@ public class TextureAtlas extends Texture {
      * @see #load(TextureParam, Entry...)
      * @see #load(Entry...)
      */
-    public static TextureAtlas load(@Nullable Supplier<ByteBuffer> fail, Entry... entries) {
+    public static TextureAtlas load(@Nullable Supplier<@Nullable ByteBuffer> fail, Entry... entries) {
         return load(fail, null, entries);
     }
 
@@ -232,9 +232,19 @@ public class TextureAtlas extends Texture {
      * Gets the texture region with the given name.
      *
      * @param name the name of the region.
+     * @return the region wrapped with optional.
+     */
+    public Optional<TextureRegion> getOptional(String name) {
+        return Optional.ofNullable(get(name));
+    }
+
+    /**
+     * Gets the texture region with the given name.
+     *
+     * @param name the name of the region.
      * @return the region.
      */
-    public Optional<TextureRegion> get(String name) {
-        return Optional.ofNullable(regionMap.get(name));
+    public TextureRegion get(String name) {
+        return regionMap.get(name);
     }
 }

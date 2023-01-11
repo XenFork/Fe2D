@@ -61,19 +61,15 @@ public final class NativeImage implements PackerRegionSize, Disposable {
      * @see #load(FileContext, Supplier)
      * @see #load(FileContext)
      */
-    public static NativeImage load(FileContext context, int desiredChannels, @Nullable Supplier<ByteBuffer> fail)
+    public static NativeImage load(FileContext context, int desiredChannels, @Nullable Supplier<@Nullable ByteBuffer> fail)
         throws IllegalStateException {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);
             IntBuffer height = stack.mallocInt(1);
             IntBuffer channels = stack.mallocInt(1);
             ByteBuffer buffer = stbi_load_from_memory(context.loadBinary(), width, height, channels, desiredChannels);
-            if (buffer == null) {
-                if (fail == null) {
-                    throw new IllegalStateException("Failed to load image from context " + context + ". Reason: " + stbi_failure_reason());
-                } else {
-                    buffer = fail.get();
-                }
+            if (buffer == null && (fail == null || (buffer = fail.get()) == null)) {
+                throw new IllegalStateException("Failed to load image from context " + context + ". Reason: " + stbi_failure_reason());
             }
             return new NativeImage(width.get(0), height.get(0), buffer);
         }
@@ -107,7 +103,7 @@ public final class NativeImage implements PackerRegionSize, Disposable {
      * @see #load(FileContext, int)
      * @see #load(FileContext)
      */
-    public static NativeImage load(FileContext context, @Nullable Supplier<ByteBuffer> fail)
+    public static NativeImage load(FileContext context, @Nullable Supplier<@Nullable ByteBuffer> fail)
         throws IllegalStateException {
         return load(context, STBI_rgb_alpha, fail);
     }

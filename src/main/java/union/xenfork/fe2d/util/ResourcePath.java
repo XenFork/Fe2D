@@ -35,6 +35,10 @@ public final class ResourcePath {
      * The prefix of location of asset files.
      */
     public static final String ASSETS = "assets";
+    /**
+     * The prefix of location of data files.
+     */
+    public static final String DATA = "data";
     private final String namespace, body;
 
     /**
@@ -115,6 +119,27 @@ public final class ResourcePath {
      */
     public static String assets(String path) {
         return new ResourcePath(path).toLocation(ASSETS);
+    }
+
+    /**
+     * Creates the location string for data.
+     *
+     * @param namespace the namespace.
+     * @param body      the body.
+     * @return the location string.
+     */
+    public static String data(String namespace, String body) {
+        return toLocation(namespace, body, DATA);
+    }
+
+    /**
+     * Creates the location string for data.
+     *
+     * @param path the path string, separated with '{@code :}'.
+     * @return the location string.
+     */
+    public static String data(String path) {
+        return new ResourcePath(path).toLocation(DATA);
     }
 
     /**

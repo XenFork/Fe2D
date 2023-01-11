@@ -16,7 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.test
+package union.xenfork.fe2d.test.breakout
+
+import union.xenfork.fe2d.application
 
 /**
  * breakout game
@@ -24,5 +26,10 @@ package union.xenfork.fe2d.test
  * @author squid233
  * @since 0.1.0
  */
-fun main() {
+fun main() = application(
+    useStderr = true,
+    applicationName = "Breakout",
+    windowWidth = 1280,
+    windowHeight = 720
+) {
 }

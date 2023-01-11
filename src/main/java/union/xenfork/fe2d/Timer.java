@@ -18,26 +18,19 @@
 
 package union.xenfork.fe2d;
 
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 /**
- * The global objects of Fork Engine 2D.
+ * The timer.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
+public final class Timer {
     /**
-     * The file loader.
+     * Advances the timer.
      */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
-    /**
-     * The input.
-     */
-    public static Input input;
+    public void advanceTime() {
+        double currTime = glfwGetTime();
+    }
 }
