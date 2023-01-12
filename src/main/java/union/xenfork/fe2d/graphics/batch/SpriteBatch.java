@@ -70,6 +70,12 @@ public final class SpriteBatch implements Batch {
     private Texture texture;
     private float invTexWidth, invTexHeight;
 
+    /**
+     * Creates the sprite batch with the given shader and size.
+     *
+     * @param defaultShader the custom shader to be used. if no custom shader provided, {@link #createDefaultShader()} is used.
+     * @param maxSprites    the max sprite count. defaults to {@value #DEFAULT_MAX_SPRITES}.
+     */
     public SpriteBatch(@Nullable ShaderProgram defaultShader, int maxSprites) {
         // note: since 0x7FFFFFFF / 4 * SPRITE_SIZE overflows,
         // we use 0x7FFFFFFF / SPRITE_SIZE / SPRITE_VERTEX as the max count.
@@ -93,18 +99,38 @@ public final class SpriteBatch implements Batch {
         mesh.setIndices(indices);
     }
 
+    /**
+     * Creates the sprite batch with the given size.
+     *
+     * @param maxSprites the max sprite count.
+     */
     public SpriteBatch(int maxSprites) {
         this(null, maxSprites);
     }
 
+    /**
+     * Creates the sprite batch with the given shader.
+     *
+     * @param defaultShader the custom shader to be used. if no custom shader provided, {@link #createDefaultShader()} is used.
+     */
     public SpriteBatch(@Nullable ShaderProgram defaultShader) {
         this(defaultShader, DEFAULT_MAX_SPRITES);
     }
 
+    /**
+     * Creates the sprite batch with the default size.
+     */
     public SpriteBatch() {
         this(null, DEFAULT_MAX_SPRITES);
     }
 
+    /**
+     * Creates the default shader program.
+     * <p>
+     * Builtin vertex attributes and <a href="../ShaderProgram.html#Builtin_Uniforms">uniforms</a> are used.
+     *
+     * @return the shader program.
+     */
     public static ShaderProgram createDefaultShader() {
         return new ShaderProgram(String.format("""
             #version 150 core
@@ -150,6 +176,7 @@ public final class SpriteBatch implements Batch {
 
     @Override
     public void flush() {
+        checkDrawing();
         mesh.updateVertices(vertexBufferPos);
         int currPrg = currentProgram();
         int currTex = textureBinding2D();

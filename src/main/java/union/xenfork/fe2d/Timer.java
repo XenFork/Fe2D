@@ -27,10 +27,29 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
  * @since 0.1.0
  */
 public final class Timer {
+    private double previous = glfwGetTime();
+    private double lag = 0.0;
+    /**
+     * The time in seconds to be spent per update.
+     */
+    public double secondsPerUpdate = 0.02;
+
     /**
      * Advances the timer.
+     *
+     * @param action the action to be performed per update.
+     * @return the normalized time to the next rendering.
      */
-    public void advanceTime() {
+    public double advanceTime(Runnable action) {
         double currTime = glfwGetTime();
+        double elapsed = currTime - previous;
+        previous = currTime;
+
+        lag += elapsed;
+        while (lag >= secondsPerUpdate) {
+            action.run();
+            lag -= secondsPerUpdate;
+        }
+        return lag / secondsPerUpdate;
     }
 }

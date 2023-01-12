@@ -16,38 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d
+package union.xenfork.fe2d.util;
 
 /**
- * The kotlin application configure.
+ * The pair struct that contains two objects.
  *
+ * @param <T>    the type of <i>{@code first}</i>.
+ * @param <U>    the type of <i>{@code second}</i>.
+ * @param first  the first object.
+ * @param second the second object.
  * @author squid233
  * @since 0.1.0
  */
-class ApplicationKt : Application() {
-}
-
-/**
- * Creates and launches an application with the given configuration.
- *
- * @see ApplicationConfig
- */
-fun application(
-    useStderr: Boolean = false,
-    applicationName: String = "Fork Engine 2D Game",
-    windowWidth: Int = 800,
-    windowHeight: Int = 600,
-    windowTitle: String? = null,
-    block: ApplicationKt.() -> Unit
-) {
-    ApplicationKt().apply {
-        block()
-        launch(ApplicationConfig().also {
-            it.useStderr = useStderr
-            it.applicationName = applicationName
-            it.windowWidth = windowWidth
-            it.windowHeight = windowHeight
-            it.windowTitle = windowTitle
-        })
-    }
+public record Pair<T, U>(T first, U second) {
 }

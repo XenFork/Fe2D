@@ -34,10 +34,19 @@ import union.xenfork.fe2d.graphics.texture.TextureRegion;
  * @since 0.1.0
  */
 public interface Batch extends Disposable {
+    /**
+     * Begins drawing. Can only be called before drawing.
+     */
     void begin();
 
+    /**
+     * Ends drawing. Can only be called while drawing.
+     */
     void end();
 
+    /**
+     * Flushes the buffer without ending drawing. Can only be called while drawing.
+     */
     void flush();
 
     void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform);
@@ -54,14 +63,41 @@ public interface Batch extends Disposable {
 
     void draw(Texture texture, float x, float y, TextureRegion region);
 
+    /**
+     * Draws a sprite.
+     *
+     * @param sprite the sprite to be drawn.
+     */
     void draw(Sprite sprite);
 
+    /**
+     * Sets the custom shader.
+     * <p>
+     * This operation causes {@link #flush() flushing}.
+     *
+     * @param shader the custom shader.
+     */
     void setShader(ShaderProgram shader);
 
+    /**
+     * Gets the shader.
+     *
+     * @return the custom shader user set; or the default shader.
+     */
     ShaderProgram shader();
 
+    /**
+     * Gets the projection matrix.
+     *
+     * @return the projection matrix.
+     */
     Matrix4f projectionMatrix();
 
+    /**
+     * Gets the model matrix.
+     *
+     * @return the model matrix.
+     */
     Matrix4f modelMatrix();
 
     void setProjectionMatrix(Matrix4fc projectionMatrix);

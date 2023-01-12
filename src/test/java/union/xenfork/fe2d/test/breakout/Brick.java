@@ -49,6 +49,7 @@ public final class Brick extends Sprite {
     public static final Color PURPLE_COLOR = new Color(0xffff00ff);
     public static final Color YELLOW_COLOR = new Color(0xffcccc66);
     public boolean solid = false;
+    public boolean destroyed = false;
 
     public Brick(Texture texture, TextureRegion textureRegion) {
         super(texture, textureRegion);

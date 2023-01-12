@@ -18,12 +18,14 @@
 
 package union.xenfork.fe2d.test.breakout;
 
-import org.joml.Math;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
+import org.joml.Vector2f;
 import union.xenfork.fe2d.Application;
 import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
+import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.GLStateManager;
@@ -36,11 +38,13 @@ import union.xenfork.fe2d.graphics.texture.Texture;
 import union.xenfork.fe2d.graphics.texture.TextureAtlas;
 import union.xenfork.fe2d.graphics.texture.TextureParam;
 import union.xenfork.fe2d.util.ResourcePath;
+import union.xenfork.fe2d.util.math.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.joml.Math.*;
 import static org.lwjgl.opengl.GL11C.*;
 
 /**
@@ -51,16 +55,17 @@ import static org.lwjgl.opengl.GL11C.*;
  */
 public final class Breakout extends Application {
     private static final int GAME_ACTIVE = 1;
-    private static final int LEVEL_WIDTH = 1600;
-    private static final int LEVEL_HEIGHT = 900;
+    public static final int LEVEL_WIDTH = 1600;
+    public static final int LEVEL_HEIGHT = 900;
     private static final float PLAYER_SIZE_WIDTH = 150;
     private static final float PLAYER_SIZE_HEIGHT = 30;
     private ShaderProgram shaderProgram;
     private Mesh backgroundMesh;
-    private Mesh paddleMesh;
     private TextureAtlas textureAtlas;
     private SpriteBatch batch;
     private Sprite player;
+    private BallObject ball;
+    private final Vector2f ballCollisionDiff = new Vector2f();
     private final List<Level> levels = new ArrayList<>();
     private int level = 1;
     private int state = GAME_ACTIVE;
@@ -92,13 +97,15 @@ public final class Breakout extends Application {
 
         public void render(SpriteBatch batch) {
             for (Brick brick : bricks) {
-                batch.draw(brick);
+                if (!brick.destroyed) {
+                    batch.draw(brick);
+                }
             }
         }
 
         public boolean isCompleted() {
             for (Brick brick : bricks) {
-                if (!brick.solid) {
+                if (!brick.solid && !brick.destroyed) {
                     return false;
                 }
             }
@@ -149,6 +156,28 @@ public final class Breakout extends Application {
     }
 
     @Override
+    public void onCursorPos(double posX, double posY) {
+        super.onCursorPos(posX, posY);
+        if (Fe2D.input.isTouched()) {
+            float prevX = player.position.x;
+            player.position.x = clamp(0f,
+                LEVEL_WIDTH - PLAYER_SIZE_WIDTH,
+                player.position.x + (float) Fe2D.input.cursorDeltaX() * 2.4f);
+            if (ball.stuck) {
+                ball.position.x += (player.position.x - prevX);
+            }
+        }
+    }
+
+    @Override
+    public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
+        super.onKey(key, scancode, action, mods);
+        if (action == Input.Action.RELEASE) {
+            ball.stuck = false;
+        }
+    }
+
+    @Override
     public void init() {
         super.init();
         glClearColor(0f, 0f, 0f, 1f);
@@ -179,26 +208,91 @@ public final class Breakout extends Application {
 
         player = new Sprite(textureAtlas, textureAtlas.get("paddle"));
         player.size.set(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);
-        paddleMesh = GeometryMesh.sprites(player);
         player.position.set((LEVEL_WIDTH - PLAYER_SIZE_WIDTH) * .5f, 0f);
+
+        ball = new BallObject(textureAtlas, textureAtlas.get("face"), BallObject.RADIUS);
+        ball.position.set(player.position).add(player.size.x() * .5f - BallObject.RADIUS, player.size.y());
 
         Level one = loadLevel(Fe2D.files.internal(ResourcePath.data("breakout:level/one.txt")), LEVEL_WIDTH, LEVEL_HEIGHT);
         levels.add(one);
     }
 
+    public void doCollisions() {
+        // brick and ball
+        for (Brick brick : levels.get(level - 1).bricks) {
+            if (!brick.destroyed) {
+                var collision = ball.checkCollision(brick, ballCollisionDiff);
+                if (collision.first()) {
+                    if (!brick.solid) {
+                        brick.destroyed = true;
+                    }
+                    Direction dir = collision.second();
+                    if (dir.isOnAxisX()) {
+                        ball.velocity.x = -ball.velocity.x();
+                        float col = ball.radius - abs(ballCollisionDiff.x());
+                        switch (dir) {
+                            case LEFT -> ball.position.x += col;
+                            case RIGHT -> ball.position.x -= col;
+                        }
+                    } else if (dir.isOnAxisY()) {
+                        ball.velocity.y = -ball.velocity.y();
+                        float col = ball.radius - abs(ballCollisionDiff.y());
+                        switch (dir) {
+                            case DOWN -> ball.position.y += col;
+                            case UP -> ball.position.y -= col;
+                        }
+                    }
+                }
+            }
+        }
+
+        // paddle and ball
+        if (!ball.stuck) {
+            var collision = ball.checkCollision(player, ballCollisionDiff);
+            if (collision.first()) {
+                float centerBoard = player.position.x() + player.size.x() * 0.5f;
+                float distance = ball.position.x() + ball.radius - centerBoard;
+                float percentage = distance / (player.size.x() * 0.5f);
+                float strength = 2.0f;
+                float oldVx = ball.velocity.x();
+                float oldVy = ball.velocity.y();
+                ball.velocity.x = BallObject.INIT_VELOCITY_X * percentage * strength;
+                ball.velocity.y = abs(ball.velocity.y());
+                ball.velocity.normalize().mul(sqrt(oldVx * oldVx + oldVy * oldVy));
+            }
+        }
+    }
+
+    private void resetLevel() {
+        for (Brick brick : levels.get(level - 1).bricks) {
+            brick.destroyed = false;
+        }
+    }
+
+    private void resetPlayer() {
+        player.position.set((LEVEL_WIDTH - PLAYER_SIZE_WIDTH) * .5f, 0f);
+        ball.reset(player.position.x() + player.size.x() * .5f - BallObject.RADIUS, player.position.y() + player.size.y());
+    }
+
     @Override
-    public void onCursorPos(double posX, double posY) {
-        super.onCursorPos(posX, posY);
-        if (Fe2D.input.isTouched()) {
-            player.position.x = Math.clamp(0f,
-                LEVEL_WIDTH - PLAYER_SIZE_WIDTH,
-                player.position.x + (float) Fe2D.input.cursorDeltaX() * 2.5f);
+    public void fixedUpdate() {
+        super.fixedUpdate();
+        ball.move();
+        doCollisions();
+    }
+
+    @Override
+    public void lateUpdate() {
+        super.lateUpdate();
+        if ((ball.position.y() + ball.radius * 2f) < 0) {
+            resetLevel();
+            resetPlayer();
         }
     }
 
     @Override
-    public void render() {
-        super.render();
+    public void render(double delta) {
+        super.render(delta);
 
         if (state == GAME_ACTIVE) {
             shaderProgram.use();
@@ -209,14 +303,10 @@ public final class Breakout extends Application {
             textureAtlas.bind();
             backgroundMesh.render();
 
-            modelMatrix.pushMatrix().mul(player.getTransform());
-            shaderProgram.setModelMatrix(modelMatrix);
-            modelMatrix.popMatrix();
-            shaderProgram.uploadUniforms();
-            paddleMesh.render();
-
             batch.begin();
             levels.get(level - 1).render(batch);
+            batch.draw(player);
+            batch.draw(ball);
             batch.end();
 
             ShaderProgram.ZERO.use();
@@ -229,7 +319,6 @@ public final class Breakout extends Application {
         super.dispose();
         dispose(shaderProgram);
         dispose(backgroundMesh);
-        dispose(paddleMesh);
         dispose(textureAtlas);
         dispose(batch);
     }

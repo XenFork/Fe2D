@@ -26,10 +26,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * The keyboard and mouse input.
- *
  * <h2>Keyboard</h2>
  * There are 2 states for keys: {@link #isKeyDown(int) down} and {@link #isKeyUp(int) up}.
- *
  * <h2>Mouse</h2>
  * For mouse button, use {@link #isMouseButtonDown(int)} or {@link #isTouched()} to check the state.
  * <p>
@@ -59,6 +57,27 @@ public final class Input {
             cursorDeltaX = 0;
             cursorDeltaY = 0;
         }
+    }
+
+    /**
+     * The key or mouse callback actions.
+     *
+     * @author squid233
+     * @since 0.1.0
+     */
+    public enum Action {
+        /**
+         * The key or button was released.
+         */
+        RELEASE,
+        /**
+         * The key or button was pressed.
+         */
+        PRESS,
+        /**
+         * The key was held down until it repeated.
+         */
+        REPEAT
     }
 
     ///////////////////////////////////////////////////////////////////////////

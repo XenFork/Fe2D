@@ -148,7 +148,7 @@ publishing {
             groupId = projGroupId
             artifactId = ktArtifactId
             version = projVersion
-            from(components["java"])
+            from(components["kotlin"])
             pom {
                 name.set(projName)
                 description.set(projDesc)

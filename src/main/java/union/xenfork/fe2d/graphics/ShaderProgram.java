@@ -30,8 +30,7 @@ import static org.lwjgl.opengl.GL20C.*;
 
 /**
  * The shader program with vertex and fragment shader.
- *
- * <h2>Builtin Uniforms</h2>
+ * <h2 id="Builtin_Uniforms">Builtin Uniforms</h2>
  * There are some builtin uniforms are available for conveniently setting values.
  * <p>
  * These uniforms are directly passed to the shader:

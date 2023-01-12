@@ -18,6 +18,7 @@
 
 package union.xenfork.fe2d;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
@@ -119,6 +120,12 @@ public class Application implements Disposable {
                         Fe2D.input.updateCursorPos(xpos, ypos);
                         onCursorPos(xpos, ypos);
                     });
+                    glfwSetKeyCallback(window, (handle, key, scancode, action, mods) ->
+                        onKey(key, scancode, switch (action) {
+                            case GLFW_PRESS -> Input.Action.PRESS;
+                            case GLFW_REPEAT -> Input.Action.REPEAT;
+                            default -> Input.Action.RELEASE;
+                        }, mods));
 
                     // Makes center
                     //if (config.windowMonitor != MemoryUtil.NULL) {
@@ -143,10 +150,13 @@ public class Application implements Disposable {
                     init();
 
                     // Game loop
+                    Fe2D.timer = new Timer();
                     while (!glfwWindowShouldClose(window)) {
                         glfwPollEvents();
+                        double delta = Fe2D.timer.advanceTime(this::fixedUpdate);
                         update();
-                        render();
+                        lateUpdate();
+                        render(delta);
                         glfwSwapBuffers(window);
                     }
                     dispose();
@@ -187,6 +197,17 @@ public class Application implements Disposable {
     public void onCursorPos(double posX, double posY) {
     }
 
+    /**
+     * Will be called when a key is pressed, repeated or released.
+     *
+     * @param key      the keyboard key that was pressed or released.
+     * @param scancode the platform-specific scancode of the key.
+     * @param action   the key action.
+     * @param mods     bitfield describing which modifiers keys were held down.
+     */
+    public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Pre-loop
     ///////////////////////////////////////////////////////////////////////////
@@ -208,15 +229,30 @@ public class Application implements Disposable {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * The fixed updating is performed as a fixed time step. Suitable for physical engine and AI pathfinder.
+     */
+    public void fixedUpdate() {
+    }
+
+    /**
      * Updating game objects per frame.
      */
     public void update() {
     }
 
     /**
-     * Renders game objects per frame.
+     * Just updating, but it will be called after {@link #update()}.
      */
-    public void render() {
+    public void lateUpdate() {
+    }
+
+    /**
+     * Renders game objects per frame.
+     *
+     * @param delta the normalized time of interval of two rendering. can be used for linear interpolation
+     *              to implement smooth moving.
+     */
+    public void render(double delta) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 

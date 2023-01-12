@@ -10,8 +10,8 @@ Added: Texture, TextureAtlas
 Added: Graphics
 Added: Sprite, SpriteBatch
 Added: Input
-
 Added: Timer
+
 Added: AssetManager
 Added: FontBatch
 Added: Font, BitmapFont, Unifont, TrueTypeFont

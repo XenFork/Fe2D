@@ -54,11 +54,11 @@ public class Sprite {
     /**
      * The sprite texture.
      */
-    public final Texture texture;
+    public Texture texture;
     /**
      * The sprite texture region.
      */
-    public final TextureRegion textureRegion;
+    public TextureRegion textureRegion;
     /**
      * The sprite position.
      */
@@ -86,7 +86,7 @@ public class Sprite {
     private final Matrix4f transform = new Matrix4f();
 
     /**
-     * Creates a sprite with the given texture region.
+     * Creates a sprite with the given texture and texture region.
      *
      * @param texture       the texture.
      * @param textureRegion the texture region.
@@ -98,12 +98,18 @@ public class Sprite {
     }
 
     /**
-     * Creates a sprite.
+     * Creates a sprite with the given texture.
      *
      * @param texture the texture.
      */
     public Sprite(Texture texture) {
         this(texture, TextureRegion.full(texture));
+    }
+
+    /**
+     * Creates a sprite. The texture must be set later.
+     */
+    public Sprite() {
     }
 
     /**

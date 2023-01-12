@@ -40,4 +40,8 @@ public final class Fe2D {
      * The input.
      */
     public static Input input;
+    /**
+     * The global timer.
+     */
+    public static Timer timer;
 }
