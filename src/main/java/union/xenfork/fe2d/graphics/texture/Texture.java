@@ -77,27 +77,40 @@ public class Texture implements Disposable, PackerRegionSize {
     /**
      * Creates a texture and loads from the given image.
      *
-     * @param image the image. will not be disposed.
-     * @param param the texture parameters.
+     * @param image          the image. will not be disposed.
+     * @param param          the texture parameters.
+     * @param internalFormat the texture internal format.
+     * @param format         the texel data format.
      * @return the texture.
      */
-    public static Texture ofImage(NativeImage image, @Nullable TextureParam param) {
+    public static Texture ofImage(NativeImage image, @Nullable TextureParam param, int internalFormat, int format) {
         Texture texture = new Texture(image.width(), image.height());
         int currTex = GLStateManager.textureBinding2D();
         GLStateManager.bindTexture2D(texture.id);
         acceptParameters(param);
         glTexImage2D(GL_TEXTURE_2D,
             0,
-            GL_RGBA8,
+            internalFormat,
             image.width(),
             image.height(),
             0,
-            GL_RGBA,
+            format,
             GL_UNSIGNED_BYTE,
             image.buffer());
         glGenerateMipmap(GL_TEXTURE_2D);
         GLStateManager.bindTexture2D(currTex);
         return texture;
+    }
+
+    /**
+     * Creates a texture and loads from the given image.
+     *
+     * @param image the image. will not be disposed.
+     * @param param the texture parameters.
+     * @return the texture.
+     */
+    public static Texture ofImage(NativeImage image, @Nullable TextureParam param) {
+        return ofImage(image, param, GL_RGBA8, GL_RGBA);
     }
 
     /**
@@ -113,15 +126,28 @@ public class Texture implements Disposable, PackerRegionSize {
     /**
      * Creates a texture and loads from the given file.
      *
+     * @param context        the file context.
+     * @param param          the texture parameters.
+     * @param internalFormat the texture internal format.
+     * @param format         the texel data format.
+     * @return the texture.
+     */
+    public static Texture ofFile(FileContext context, @Nullable TextureParam param, int internalFormat, int format) {
+        NativeImage image = NativeImage.load(context);
+        Texture texture = ofImage(image, param, internalFormat, format);
+        image.dispose();
+        return texture;
+    }
+
+    /**
+     * Creates a texture and loads from the given file.
+     *
      * @param context the file context.
      * @param param   the texture parameters.
      * @return the texture.
      */
     public static Texture ofFile(FileContext context, @Nullable TextureParam param) {
-        NativeImage image = NativeImage.load(context);
-        Texture texture = ofImage(image, param);
-        image.dispose();
-        return texture;
+        return ofFile(context, param, GL_RGBA8, GL_RGBA);
     }
 
     /**

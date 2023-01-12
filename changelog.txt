@@ -11,10 +11,11 @@ Added: Graphics
 Added: Sprite, SpriteBatch
 Added: Input
 Added: Timer
+Added: FontBatch
+Added: Font, BitmapFont, Unifont
 
 Added: AssetManager
-Added: FontBatch
-Added: Font, BitmapFont, Unifont, TrueTypeFont
+Added: TrueTypeFont
 Added: Screen, Widget, Button
 Added: Configuration
 Added: Cache, BinaryCache

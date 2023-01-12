@@ -55,7 +55,8 @@ public final class BallObject extends Sprite {
             radius * radius,
             result
         );
-        return new Pair<>(test, Direction.fromVector(result));
+        Direction direction = Direction.fromVector(result);
+        return new Pair<>(test && direction != null, direction);
     }
 
     public void move() {

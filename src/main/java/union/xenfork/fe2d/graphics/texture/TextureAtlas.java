@@ -26,9 +26,11 @@ import org.overrun.binpacking.PackerFitPos;
 import org.overrun.binpacking.PackerRegion;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
+import union.xenfork.fe2d.util.ResourcePath;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL30C.*;
@@ -73,6 +75,25 @@ public class TextureAtlas extends Texture {
      */
     public static Entry entry(FileContext context) {
         return new Entry(context, context.path());
+    }
+
+    /**
+     * Creates the entries with the given resource paths and prefix.
+     *
+     * @param contextProvider the file context function.
+     * @param prefix          the location prefix.
+     * @param paths           the resource paths.
+     * @return the entries.
+     */
+    public static Entry[] entries(Function<String, FileContext> contextProvider,
+                                  String prefix,
+                                  ResourcePath... paths) {
+        Entry[] entries = new Entry[paths.length];
+        for (int i = 0, len = paths.length; i < len; i++) {
+            ResourcePath path = paths[i];
+            entries[i] = entry(contextProvider.apply(path.toLocation(prefix)), path.toString());
+        }
+        return entries;
     }
 
     /**
@@ -231,20 +252,20 @@ public class TextureAtlas extends Texture {
     /**
      * Gets the texture region with the given name.
      *
-     * @param name the name of the region.
+     * @param name the name of the region. always converted with {@link String#valueOf(Object)}.
      * @return the region wrapped with optional.
      */
-    public Optional<TextureRegion> getOptional(String name) {
+    public Optional<TextureRegion> getOptional(Object name) {
         return Optional.ofNullable(get(name));
     }
 
     /**
      * Gets the texture region with the given name.
      *
-     * @param name the name of the region.
+     * @param name the name of the region. always converted with {@link String#valueOf(Object)}.
      * @return the region.
      */
-    public TextureRegion get(String name) {
-        return regionMap.get(name);
+    public TextureRegion get(Object name) {
+        return regionMap.get(String.valueOf(name));
     }
 }

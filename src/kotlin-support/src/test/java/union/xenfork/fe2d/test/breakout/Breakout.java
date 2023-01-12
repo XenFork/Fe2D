@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector2f;
+import org.lwjgl.glfw.GLFW;
 import union.xenfork.fe2d.Application;
 import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
@@ -30,7 +31,9 @@ import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
+import union.xenfork.fe2d.graphics.batch.FontBatch;
 import union.xenfork.fe2d.graphics.batch.SpriteBatch;
+import union.xenfork.fe2d.graphics.font.Unifont;
 import union.xenfork.fe2d.graphics.mesh.GeometryMesh;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
 import union.xenfork.fe2d.graphics.sprite.Sprite;
@@ -54,22 +57,32 @@ import static org.lwjgl.opengl.GL11C.*;
  * @since 0.1.0
  */
 public final class Breakout extends Application {
+    private static final int GAME_MENU = 0;
     private static final int GAME_ACTIVE = 1;
+    private static final int GAME_WIN = 1;
     public static final int LEVEL_WIDTH = 1600;
     public static final int LEVEL_HEIGHT = 900;
     private static final float PLAYER_SIZE_WIDTH = 150;
     private static final float PLAYER_SIZE_HEIGHT = 30;
+    public static final ResourcePath BACKGROUND = new ResourcePath("breakout:texture/background.jpg");
+    public static final ResourcePath BLOCK = new ResourcePath("breakout:texture/block.png");
+    public static final ResourcePath BLOCK_SOLID = new ResourcePath("breakout:texture/block_solid.png");
+    public static final ResourcePath FACE = new ResourcePath("breakout:texture/face.png");
+    public static final ResourcePath PADDLE = new ResourcePath("breakout:texture/paddle.png");
     private ShaderProgram shaderProgram;
     private Mesh backgroundMesh;
     private TextureAtlas textureAtlas;
     private SpriteBatch batch;
     private Sprite player;
     private BallObject ball;
+    private Unifont unifont;
+    private FontBatch fontBatch;
     private final Vector2f ballCollisionDiff = new Vector2f();
     private final List<Level> levels = new ArrayList<>();
     private int level = 1;
     private int state = GAME_ACTIVE;
     private final Matrix4f projectionMatrix = new Matrix4f().setOrtho2D(0, LEVEL_WIDTH, 0, LEVEL_HEIGHT);
+    private final Matrix4f guiProjMatrix = new Matrix4f();
     private final Matrix4fStack modelMatrix = new Matrix4fStack(2);
 
     /**
@@ -121,7 +134,7 @@ public final class Breakout extends Application {
                 for (int x = 0; x < width; x++) {
                     int tile = tileData.get(y).get(x);
                     if (tile == Brick.SOLID) {
-                        Brick brick = new Brick(textureAtlas, textureAtlas.get("block_solid"));
+                        Brick brick = new Brick(textureAtlas, textureAtlas.get(BLOCK_SOLID));
                         brick.position.set(unitWidth * x, screenHeight - unitHeight * (y + 1));
                         brick.size.set(unitWidth, unitHeight);
                         brick.color = Brick.SOLID_COLOR;
@@ -138,7 +151,7 @@ public final class Breakout extends Application {
                             case Brick.YELLOW -> Brick.YELLOW_COLOR;
                             default -> Color.WHITE;
                         };
-                        Brick brick = new Brick(textureAtlas, textureAtlas.get("block"));
+                        Brick brick = new Brick(textureAtlas, textureAtlas.get(BLOCK));
                         brick.position.set(unitWidth * x, screenHeight - unitHeight * (y + 1));
                         brick.size.set(unitWidth, unitHeight);
                         brick.color = color;
@@ -153,6 +166,17 @@ public final class Breakout extends Application {
         Level level = new Level();
         level.load(fileContext.loadString(), screenWidth, screenHeight);
         return level;
+    }
+
+    public Level getCurrentLevel() {
+        return levels.get(level - 1);
+    }
+
+    @Override
+    public void onResize(int width, int height) {
+        super.onResize(width, height);
+        guiProjMatrix.setOrtho2D(0, width, 0, height);
+        fontBatch.setProjectionMatrix(guiProjMatrix);
     }
 
     @Override
@@ -172,7 +196,7 @@ public final class Breakout extends Application {
     @Override
     public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
         super.onKey(key, scancode, action, mods);
-        if (action == Input.Action.RELEASE) {
+        if (action == Input.Action.RELEASE && key == GLFW.GLFW_KEY_SPACE) {
             ball.stuck = false;
         }
     }
@@ -193,33 +217,45 @@ public final class Breakout extends Application {
 
         textureAtlas = TextureAtlas.load(
             new TextureParam().minFilter(GL_LINEAR),
-            TextureAtlas.entry(Fe2D.files.internal(ResourcePath.assets("breakout:texture/background.jpg")), "background"),
-            TextureAtlas.entry(Fe2D.files.internal(ResourcePath.assets("breakout:texture/block.png")), "block"),
-            TextureAtlas.entry(Fe2D.files.internal(ResourcePath.assets("breakout:texture/block_solid.png")), "block_solid"),
-            TextureAtlas.entry(Fe2D.files.internal(ResourcePath.assets("breakout:texture/face.png")), "face"),
-            TextureAtlas.entry(Fe2D.files.internal(ResourcePath.assets("breakout:texture/paddle.png")), "paddle")
+            TextureAtlas.entries(Fe2D.files::internal, ResourcePath.ASSETS,
+                BACKGROUND,
+                BLOCK,
+                BLOCK_SOLID,
+                FACE,
+                PADDLE
+            )
         );
 
-        Sprite sprite = new Sprite(textureAtlas, textureAtlas.get("background"));
+        Sprite sprite = new Sprite(textureAtlas, textureAtlas.get(BACKGROUND));
         backgroundMesh = GeometryMesh.sprites(sprite);
 
         batch = new SpriteBatch();
         batch.setProjectionMatrix(projectionMatrix);
 
-        player = new Sprite(textureAtlas, textureAtlas.get("paddle"));
+        player = new Sprite(textureAtlas, textureAtlas.get(PADDLE));
         player.size.set(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);
         player.position.set((LEVEL_WIDTH - PLAYER_SIZE_WIDTH) * .5f, 0f);
 
-        ball = new BallObject(textureAtlas, textureAtlas.get("face"), BallObject.RADIUS);
+        ball = new BallObject(textureAtlas, textureAtlas.get(FACE), BallObject.RADIUS);
         ball.position.set(player.position).add(player.size.x() * .5f - BallObject.RADIUS, player.size.y());
 
         Level one = loadLevel(Fe2D.files.internal(ResourcePath.data("breakout:level/one.txt")), LEVEL_WIDTH, LEVEL_HEIGHT);
+        Level two = loadLevel(Fe2D.files.internal(ResourcePath.data("breakout:level/two.txt")), LEVEL_WIDTH, LEVEL_HEIGHT);
+        Level three = loadLevel(Fe2D.files.internal(ResourcePath.data("breakout:level/three.txt")), LEVEL_WIDTH, LEVEL_HEIGHT);
+        Level four = loadLevel(Fe2D.files.internal(ResourcePath.data("breakout:level/four.txt")), LEVEL_WIDTH, LEVEL_HEIGHT);
         levels.add(one);
+        levels.add(two);
+        levels.add(three);
+        levels.add(four);
+
+        unifont = Unifont.create();
+        fontBatch = new FontBatch();
+        guiProjMatrix.setOrtho2D(0, Fe2D.graphics.width(), 0, Fe2D.graphics.height());
     }
 
     public void doCollisions() {
         // brick and ball
-        for (Brick brick : levels.get(level - 1).bricks) {
+        for (Brick brick : getCurrentLevel().bricks) {
             if (!brick.destroyed) {
                 var collision = ball.checkCollision(brick, ballCollisionDiff);
                 if (collision.first()) {
@@ -264,7 +300,7 @@ public final class Breakout extends Application {
     }
 
     private void resetLevel() {
-        for (Brick brick : levels.get(level - 1).bricks) {
+        for (Brick brick : getCurrentLevel().bricks) {
             brick.destroyed = false;
         }
     }
@@ -282,11 +318,25 @@ public final class Breakout extends Application {
     }
 
     @Override
+    public void update() {
+        super.update();
+        if ((ball.position.y() + ball.radius * 2f) < 0) {
+            resetPlayer();
+        }
+    }
+
+    @Override
     public void lateUpdate() {
         super.lateUpdate();
-        if ((ball.position.y() + ball.radius * 2f) < 0) {
-            resetLevel();
-            resetPlayer();
+        if (state == GAME_ACTIVE) {
+            if (getCurrentLevel().isCompleted()) {
+                level++;
+                if (level > 4) {
+                    state = GAME_WIN;
+                } else {
+                    resetPlayer();
+                }
+            }
         }
     }
 
@@ -304,10 +354,20 @@ public final class Breakout extends Application {
             backgroundMesh.render();
 
             batch.begin();
-            levels.get(level - 1).render(batch);
+            getCurrentLevel().render(batch);
             batch.draw(player);
             batch.draw(ball);
             batch.end();
+
+            fontBatch.begin();
+            fontBatch.draw(unifont,
+                """
+                    Breakout Test
+                    Fork Engine 2D
+                    氙叉联盟 (XenFork Union) 🚀""",
+                0f,
+                0f);
+            fontBatch.end();
 
             ShaderProgram.ZERO.use();
             Texture.ZERO.bind();
@@ -321,6 +381,8 @@ public final class Breakout extends Application {
         dispose(backgroundMesh);
         dispose(textureAtlas);
         dispose(batch);
+        dispose(unifont);
+        dispose(fontBatch);
     }
 
     public static void main(String[] args) {

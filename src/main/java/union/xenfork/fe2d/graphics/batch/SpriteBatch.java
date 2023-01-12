@@ -40,7 +40,7 @@ import static union.xenfork.fe2d.graphics.GLStateManager.*;
  * @author squid233
  * @since 0.1.0
  */
-public final class SpriteBatch implements Batch {
+public class SpriteBatch implements Batch {
     /**
      * The default value of max sprites.
      */
