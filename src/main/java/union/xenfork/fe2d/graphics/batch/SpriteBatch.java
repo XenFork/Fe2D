@@ -170,8 +170,8 @@ public final class SpriteBatch implements Batch {
     @Override
     public void end() {
         if (!drawing) throw new IllegalStateException("Can only call SpriteBatch.end while drawing");
-        drawing = false;
         flush();
+        drawing = false;
     }
 
     @Override

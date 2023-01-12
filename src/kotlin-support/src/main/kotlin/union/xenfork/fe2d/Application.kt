@@ -24,7 +24,7 @@ package union.xenfork.fe2d
  * @author squid233
  * @since 0.1.0
  */
-class ApplicationKt : Application() {
+class KtApplication : Application() {
 }
 
 /**
@@ -38,9 +38,9 @@ fun application(
     windowWidth: Int = 800,
     windowHeight: Int = 600,
     windowTitle: String? = null,
-    block: ApplicationKt.() -> Unit
+    block: KtApplication.() -> Unit
 ) {
-    ApplicationKt().apply {
+    KtApplication().apply {
         block()
         launch(ApplicationConfig().also {
             it.useStderr = useStderr
