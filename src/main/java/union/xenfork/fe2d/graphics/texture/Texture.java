@@ -40,6 +40,7 @@ public class Texture implements Disposable, PackerRegionSize {
     private final int id;
     private final int width;
     private final int height;
+    private boolean disposed = false;
 
     private Texture(int id) {
         this.id = id;
@@ -198,6 +199,8 @@ public class Texture implements Disposable, PackerRegionSize {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         glDeleteTextures(id);
     }
 }

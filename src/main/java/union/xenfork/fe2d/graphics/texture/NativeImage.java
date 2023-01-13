@@ -41,6 +41,7 @@ public final class NativeImage implements PackerRegionSize, Disposable {
     private final int width;
     private final int height;
     private final ByteBuffer buffer;
+    private boolean disposed = false;
 
     private NativeImage(int width, int height, ByteBuffer buffer) {
         this.width = width;
@@ -154,6 +155,8 @@ public final class NativeImage implements PackerRegionSize, Disposable {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         MemoryUtil.memFree(buffer);
     }
 }

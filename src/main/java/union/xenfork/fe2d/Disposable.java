@@ -19,7 +19,7 @@
 package union.xenfork.fe2d;
 
 /**
- * An interface similar to {@link AutoCloseable}, but doesn't throw an exception.
+ * An interface similar to {@link AutoCloseable}, but doesn't throw any exception.
  * <p>
  * The subclasses of {@code Disposable} must be explicitly disposed.
  *
@@ -29,6 +29,8 @@ package union.xenfork.fe2d;
 public interface Disposable {
     /**
      * Disposes this resource. Sub-resources should be also disposed.
+     *
+     * @implNote Re-dispose a disposed resource should be silently ignored.
      */
     void dispose();
 }

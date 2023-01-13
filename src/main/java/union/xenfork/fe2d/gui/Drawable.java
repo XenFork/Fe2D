@@ -16,36 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d;
-
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+package union.xenfork.fe2d.gui;
 
 /**
- * The global objects of Fork Engine 2D.
+ * The drawable element.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
+public interface Drawable {
     /**
-     * The file loader.
+     * Renders this element.
+     *
+     * @param delta   the normalized time of interval of two rendering.
+     *                see {@link union.xenfork.fe2d.Application#render(double) Application} for more information.
+     * @param cursorX the cursor x-coordinate, relative to the left edge of the content area.
+     * @param cursorY the cursor y-coordinate, relative to the top edge of the content area.
+     * @see union.xenfork.fe2d.Application#render(double) Application::render
      */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
-    /**
-     * The input.
-     */
-    public static Input input;
-    /**
-     * The global timer.
-     */
-    public static Timer timer;
-    /**
-     * The default asset manager. The assets in this manager are auto-disposed.
-     */
-    public static final AssetManager assets = new AssetManager();
+    void render(double delta, double cursorX, double cursorY);
 }

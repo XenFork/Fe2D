@@ -69,6 +69,7 @@ public class SpriteBatch implements Batch {
     private int drawnSpriteCount = 0;
     private Texture texture;
     private float invTexWidth, invTexHeight;
+    private boolean disposed = false;
 
     /**
      * Creates the sprite batch with the given shader and size.
@@ -412,6 +413,8 @@ public class SpriteBatch implements Batch {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         mesh.dispose();
         if (ownsShader && shader != null) {
             shader.dispose();

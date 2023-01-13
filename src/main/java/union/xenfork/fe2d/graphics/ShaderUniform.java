@@ -38,6 +38,7 @@ public final class ShaderUniform implements Disposable {
     private final Type type;
     private boolean dirty = true;
     final ByteBuffer buffer;
+    private boolean disposed = false;
 
     /**
      * Creates the shader uniform.
@@ -92,6 +93,8 @@ public final class ShaderUniform implements Disposable {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         memFree(buffer);
     }
 

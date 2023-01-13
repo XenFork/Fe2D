@@ -18,7 +18,7 @@
 
 package union.xenfork.fe2d;
 
-import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * The timer.
@@ -27,7 +27,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
  * @since 0.1.0
  */
 public final class Timer {
-    private double previous = glfwGetTime();
+    private double previous = GLFW.glfwGetTime();
     private double lag = 0.0;
     /**
      * The time in seconds to be spent per update.
@@ -41,7 +41,7 @@ public final class Timer {
      * @return the normalized time to the next rendering.
      */
     public double advanceTime(Runnable action) {
-        double currTime = glfwGetTime();
+        double currTime = GLFW.glfwGetTime();
         double elapsed = currTime - previous;
         previous = currTime;
 

@@ -126,6 +126,11 @@ public class Application implements Disposable {
                             case GLFW_REPEAT -> Input.Action.REPEAT;
                             default -> Input.Action.RELEASE;
                         }, mods));
+                    glfwSetMouseButtonCallback(window, (handle, button, action, mods) ->
+                        onMouseButton(button, switch (action) {
+                            case GLFW_PRESS -> Input.Action.PRESS;
+                            default -> Input.Action.RELEASE;
+                        }, mods));
 
                     // Makes center
                     //if (config.windowMonitor != MemoryUtil.NULL) {
@@ -159,6 +164,7 @@ public class Application implements Disposable {
                         render(delta);
                         glfwSwapBuffers(window);
                     }
+                    Fe2D.assets.dispose();
                     dispose();
                 } finally {
                     glfwDestroyWindow(window);
@@ -208,6 +214,16 @@ public class Application implements Disposable {
     public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
     }
 
+    /**
+     * Will be called when a mouse button is pressed or released.
+     *
+     * @param button the mouse button that was pressed or released.
+     * @param action the button action.
+     * @param mods   bitfield describing which modifiers keys were held down.
+     */
+    public void onMouseButton(int button, @NotNull Input.Action action, int mods) {
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Pre-loop
     ///////////////////////////////////////////////////////////////////////////
@@ -253,7 +269,6 @@ public class Application implements Disposable {
      *              to implement smooth moving.
      */
     public void render(double delta) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     ///////////////////////////////////////////////////////////////////////////

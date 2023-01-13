@@ -18,34 +18,33 @@
 
 package union.xenfork.fe2d;
 
-import union.xenfork.fe2d.file.FileLoader;
-import union.xenfork.fe2d.graphics.Graphics;
+import org.jetbrains.annotations.Nullable;
+import union.xenfork.fe2d.gui.screen.Screen;
 
 /**
- * The global objects of Fork Engine 2D.
+ * The advanced {@link Application} with a screen.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class Fe2D {
-    /**
-     * The file loader.
-     */
-    public static final FileLoader files = FileLoader.getInstance();
-    /**
-     * The graphics mode.
-     */
-    public static final Graphics graphics = Graphics.getInstance();
-    /**
-     * The input.
-     */
-    public static Input input;
-    /**
-     * The global timer.
-     */
-    public static Timer timer;
-    /**
-     * The default asset manager. The assets in this manager are auto-disposed.
-     */
-    public static final AssetManager assets = new AssetManager();
+public class Game extends Application {
+    protected @Nullable Screen screen;
+
+    @Override
+    public void onResize(int width, int height) {
+        super.onResize(width, height);
+        if (screen != null) {
+            screen.onResize(width, height);
+        }
+    }
+
+    public void openScreen(@Nullable Screen screen) {
+        if (this.screen != null) {
+            this.screen.onRemoved();
+        }
+        this.screen = screen;
+        if (screen != null) {
+            screen.init(Fe2D.graphics.width(), Fe2D.graphics.height());
+        }
+    }
 }

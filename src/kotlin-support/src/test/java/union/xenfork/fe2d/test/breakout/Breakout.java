@@ -22,13 +22,11 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector2f;
-import org.lwjgl.glfw.GLFW;
 import union.xenfork.fe2d.Application;
 import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.file.FileContext;
-import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
 import union.xenfork.fe2d.graphics.batch.FontBatch;
@@ -45,10 +43,10 @@ import union.xenfork.fe2d.util.math.Direction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.joml.Math.*;
 import static org.lwjgl.opengl.GL11C.*;
+import static union.xenfork.fe2d.gui.screen.ScreenUtil.*;
 
 /**
  * breakout game
@@ -64,6 +62,7 @@ public final class Breakout extends Application {
     public static final int LEVEL_HEIGHT = 900;
     private static final float PLAYER_SIZE_WIDTH = 150;
     private static final float PLAYER_SIZE_HEIGHT = 30;
+    public static final ResourcePath TEXTURE_ATLAS = new ResourcePath("breakout:texture/atlas");
     public static final ResourcePath BACKGROUND = new ResourcePath("breakout:texture/background.jpg");
     public static final ResourcePath BLOCK = new ResourcePath("breakout:texture/block.png");
     public static final ResourcePath BLOCK_SOLID = new ResourcePath("breakout:texture/block_solid.png");
@@ -84,83 +83,6 @@ public final class Breakout extends Application {
     private final Matrix4f projectionMatrix = new Matrix4f().setOrtho2D(0, LEVEL_WIDTH, 0, LEVEL_HEIGHT);
     private final Matrix4f guiProjMatrix = new Matrix4f();
     private final Matrix4fStack modelMatrix = new Matrix4fStack(2);
-
-    /**
-     * the game level
-     *
-     * @author squid233
-     * @since 0.1.0
-     */
-    public final class Level {
-        private final List<Brick> bricks = new ArrayList<>();
-
-        public void load(String fileContent, int screenWidth, int screenHeight) {
-            bricks.clear();
-            List<List<Integer>> tileData = new ArrayList<>();
-            fileContent.lines().forEachOrdered(s -> {
-                s = s.trim();
-                int c0 = s.codePointAt(0);
-                if (c0 < '0' || c0 > '9') return;
-                tileData.add(s.codePoints().mapToObj(codePoint -> codePoint - '0').collect(Collectors.toList()));
-            });
-            if (tileData.size() > 0) {
-                init(tileData, screenWidth, screenHeight);
-            }
-        }
-
-        public void render(SpriteBatch batch) {
-            for (Brick brick : bricks) {
-                if (!brick.destroyed) {
-                    batch.draw(brick);
-                }
-            }
-        }
-
-        public boolean isCompleted() {
-            for (Brick brick : bricks) {
-                if (!brick.solid && !brick.destroyed) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private void init(List<List<Integer>> tileData, int screenWidth, int screenHeight) {
-            int width = tileData.get(0).size();
-            int height = tileData.size();
-            float unitWidth = (float) screenWidth / width;
-            float unitHeight = (float) screenHeight * .5f / height;
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int tile = tileData.get(y).get(x);
-                    if (tile == Brick.SOLID) {
-                        Brick brick = new Brick(textureAtlas, textureAtlas.get(BLOCK_SOLID));
-                        brick.position.set(unitWidth * x, screenHeight - unitHeight * (y + 1));
-                        brick.size.set(unitWidth, unitHeight);
-                        brick.color = Brick.SOLID_COLOR;
-                        brick.solid = true;
-                        bricks.add(brick);
-                    } else if (tile > Brick.SOLID) {
-                        Color color = switch (tile) {
-                            case Brick.GREY -> Brick.GREY_COLOR;
-                            case Brick.RED -> Brick.RED_COLOR;
-                            case Brick.GREEN -> Brick.GREEN_COLOR;
-                            case Brick.BLUE -> Brick.BLUE_COLOR;
-                            case Brick.CYAN -> Brick.CYAN_COLOR;
-                            case Brick.PURPLE -> Brick.PURPLE_COLOR;
-                            case Brick.YELLOW -> Brick.YELLOW_COLOR;
-                            default -> Color.WHITE;
-                        };
-                        Brick brick = new Brick(textureAtlas, textureAtlas.get(BLOCK));
-                        brick.position.set(unitWidth * x, screenHeight - unitHeight * (y + 1));
-                        brick.size.set(unitWidth, unitHeight);
-                        brick.color = color;
-                        bricks.add(brick);
-                    }
-                }
-            }
-        }
-    }
 
     public Level loadLevel(FileContext fileContext, int screenWidth, int screenHeight) {
         Level level = new Level();
@@ -196,7 +118,7 @@ public final class Breakout extends Application {
     @Override
     public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
         super.onKey(key, scancode, action, mods);
-        if (action == Input.Action.RELEASE && key == GLFW.GLFW_KEY_SPACE) {
+        if (action == Input.Action.RELEASE && key == Input.KEY_SPACE) {
             ball.stuck = false;
         }
     }
@@ -225,6 +147,7 @@ public final class Breakout extends Application {
                 PADDLE
             )
         );
+        Fe2D.assets.putAsset(TEXTURE_ATLAS, textureAtlas);
 
         Sprite sprite = new Sprite(textureAtlas, textureAtlas.get(BACKGROUND));
         backgroundMesh = GeometryMesh.sprites(sprite);
@@ -342,8 +265,7 @@ public final class Breakout extends Application {
 
     @Override
     public void render(double delta) {
-        super.render(delta);
-
+        clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
         if (state == GAME_ACTIVE) {
             shaderProgram.use();
             shaderProgram.setProjectionMatrix(projectionMatrix);
@@ -372,6 +294,8 @@ public final class Breakout extends Application {
             ShaderProgram.ZERO.use();
             Texture.ZERO.bind();
         }
+
+        super.render(delta);
     }
 
     @Override
@@ -379,7 +303,6 @@ public final class Breakout extends Application {
         super.dispose();
         dispose(shaderProgram);
         dispose(backgroundMesh);
-        dispose(textureAtlas);
         dispose(batch);
         dispose(unifont);
         dispose(fontBatch);

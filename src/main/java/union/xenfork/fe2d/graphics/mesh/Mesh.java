@@ -45,6 +45,7 @@ public final class Mesh implements Disposable {
     private int vertexCount, indexCount;
     private final int vao, vbo, ebo;
     private int defaultDrawMode = GL_TRIANGLES;
+    private boolean disposed = false;
 
     private Mesh(boolean immutable,
                  boolean fixed,
@@ -383,6 +384,8 @@ public final class Mesh implements Disposable {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         memFree(vertexBuffer);
         memFree(indexBuffer);
         glDeleteVertexArrays(vao);

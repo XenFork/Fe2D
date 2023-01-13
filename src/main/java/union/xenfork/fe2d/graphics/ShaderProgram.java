@@ -81,6 +81,7 @@ public final class ShaderProgram implements Disposable {
     private final int id;
     private final Map<String, Integer> attributeIndexMap = new LinkedHashMap<>();
     private final Map<String, ShaderUniform> uniformMap = new HashMap<>();
+    private boolean disposed = false;
 
     private static int compileShader(String typeName, int typeEnum, String source)
         throws IllegalStateException {
@@ -363,6 +364,8 @@ public final class ShaderProgram implements Disposable {
 
     @Override
     public void dispose() {
+        if (disposed) return;
+        disposed = true;
         glDeleteProgram(id);
         for (ShaderUniform uniform : uniformMap.values()) {
             if (uniform != null) {
