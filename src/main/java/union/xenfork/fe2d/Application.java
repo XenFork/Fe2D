@@ -145,6 +145,9 @@ public class Application implements Updatable, Disposable {
                     // Creates GL context
                     glfwMakeContextCurrent(window);
                     GL.createCapabilities(true);
+                    if (config.vsync) {
+                        glfwSwapInterval(1);
+                    }
                     try (MemoryStack stack = MemoryStack.stackPush()) {
                         IntBuffer pw = stack.callocInt(1);
                         IntBuffer ph = stack.callocInt(1);
@@ -156,6 +159,7 @@ public class Application implements Updatable, Disposable {
 
                     // Game loop
                     Fe2D.timer = new Timer();
+                    double time = glfwGetTime();
                     while (!glfwWindowShouldClose(window)) {
                         glfwPollEvents();
                         double delta = Fe2D.timer.advanceTime(this::fixedUpdate);
@@ -163,6 +167,9 @@ public class Application implements Updatable, Disposable {
                         lateUpdate();
                         render(delta);
                         glfwSwapBuffers(window);
+                        double currTime = glfwGetTime();
+                        Fe2D.graphics.setDeltaFrameTime(currTime - time);
+                        time = currTime;
                     }
                     Fe2D.assets.dispose();
                     dispose();

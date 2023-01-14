@@ -4,6 +4,8 @@ Fork Engine 2D implemented with Java 17 and LWJGL 3.
 
 ## Plans
 
+`TrueTypeFont` will be implemented when LWJGL 3.3.2 is released. Currently, you can use `Unifont`.
+
 - [ ] TrueTypeFont
 - [ ] Widget, Button
 - [ ] Configuration

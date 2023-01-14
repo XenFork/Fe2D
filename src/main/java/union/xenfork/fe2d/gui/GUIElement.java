@@ -19,7 +19,7 @@
 package union.xenfork.fe2d.gui;
 
 /**
- * The gui element.
+ * The GUI element.
  *
  * @author squid233
  * @since 0.1.0

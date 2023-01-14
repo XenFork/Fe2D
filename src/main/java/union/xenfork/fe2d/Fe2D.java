@@ -18,6 +18,8 @@
 
 package union.xenfork.fe2d;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import union.xenfork.fe2d.file.FileLoader;
 import union.xenfork.fe2d.graphics.Graphics;
 
@@ -37,6 +39,14 @@ public final class Fe2D {
      */
     public static final Graphics graphics = Graphics.getInstance();
     /**
+     * The default asset manager. The assets in this manager are auto-disposed.
+     */
+    public static final AssetManager assets = new AssetManager();
+    /**
+     * The global logger for internal logging.
+     */
+    public static final Logger logger = LoggerFactory.getLogger("Fork Engine 2D");
+    /**
      * The input.
      */
     public static Input input;
@@ -44,8 +54,4 @@ public final class Fe2D {
      * The global timer.
      */
     public static Timer timer;
-    /**
-     * The default asset manager. The assets in this manager are auto-disposed.
-     */
-    public static final AssetManager assets = new AssetManager();
 }

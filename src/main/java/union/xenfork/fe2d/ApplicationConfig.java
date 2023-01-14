@@ -26,7 +26,7 @@ package union.xenfork.fe2d;
  */
 public final class ApplicationConfig {
     /**
-     * {@code true} to use {@link System#out} instead of {@link org.slf4j.Logger SLF4J Logger}.
+     * Set to {@code true} to use {@link System#out} instead of {@link org.slf4j.Logger SLF4J Logger}.
      */
     public boolean useStderr = false;
     /**
@@ -45,4 +45,9 @@ public final class ApplicationConfig {
      * The window title. This option overrides {@link #applicationName}.
      */
     public String windowTitle = null;
+    /**
+     * Set to {@code true} to use vertical-synchronization, which limits the max frames per second
+     * to the refresh rate of your monitor.
+     */
+    public boolean vsync = true;
 }

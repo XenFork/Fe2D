@@ -29,6 +29,7 @@ import org.jetbrains.annotations.ApiStatus;
 public final class Graphics {
     private static final Graphics INSTANCE = new Graphics();
     private int width, height;
+    private double deltaFrameTime;
 
     private Graphics() {
     }
@@ -43,6 +44,16 @@ public final class Graphics {
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
+    }
+
+    /**
+     * Sets the delta frame time.
+     *
+     * @param deltaFrameTime the delta frame time.
+     */
+    @ApiStatus.Internal
+    public void setDeltaFrameTime(double deltaFrameTime) {
+        this.deltaFrameTime = deltaFrameTime;
     }
 
     /**
@@ -61,6 +72,15 @@ public final class Graphics {
      */
     public int height() {
         return height;
+    }
+
+    /**
+     * Gets the delta frame time.
+     *
+     * @return the delta frame time.
+     */
+    public double deltaFrameTime() {
+        return deltaFrameTime;
     }
 
     /**

@@ -40,10 +40,6 @@ import static union.xenfork.fe2d.graphics.GLStateManager.*;
  * @since 0.1.0
  */
 public class BitmapFont extends Texture implements Font {
-    /**
-     * The white square/blank quad character.
-     */
-    public static final char WHITE_SQUARE = '□';
     private final int firstChar, lastChar;
     protected final Map<Integer, Integer> glyphU = new HashMap<>();
     protected final Map<Integer, Integer> glyphV = new HashMap<>();

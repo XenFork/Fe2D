@@ -16,38 +16,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.graphics.font;
+package union.xenfork.fe2d.gui.widget;
 
-import union.xenfork.fe2d.Disposable;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
+import union.xenfork.fe2d.gui.Drawable;
+import union.xenfork.fe2d.gui.Focusable;
+import union.xenfork.fe2d.gui.GUIElement;
 
 /**
- * The font.
+ * The GUI widget, which is a drawable, focusable and interactive element.
  *
  * @author squid233
  * @since 0.1.0
  */
-public interface Font extends Disposable {
-    /**
-     * The white square/blank quad character.
-     */
-    int WHITE_SQUARE = '□';
+public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
+    private boolean focused;
 
-    int getFirstCodePoint();
-
-    int getLastCodePoint();
-
-    default int getCodePointCount() {
-        return getLastCodePoint() - getFirstCodePoint() + 1;
+    @Override
+    public boolean focused() {
+        return focused;
     }
-
-    int getGlyphWidth(int codePoint);
-
-    int getGlyphHeight(int codePoint);
-
-    int getTextWidth(String text);
-
-    int getTextHeight(String text);
-
-    void draw(FontBatch batch, String text, float x, float y);
 }

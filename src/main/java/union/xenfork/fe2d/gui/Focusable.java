@@ -16,38 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.graphics.font;
-
-import union.xenfork.fe2d.Disposable;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
+package union.xenfork.fe2d.gui;
 
 /**
- * The font.
+ * The focusable element that can be performed by pressing space key when it is focused.
  *
  * @author squid233
  * @since 0.1.0
  */
-public interface Font extends Disposable {
+public interface Focusable {
     /**
-     * The white square/blank quad character.
+     * Returns {@code true} if this element is focused; {@code false} otherwise.
+     *
+     * @return {@code true} if this element is focused; {@code false} otherwise.
      */
-    int WHITE_SQUARE = '□';
-
-    int getFirstCodePoint();
-
-    int getLastCodePoint();
-
-    default int getCodePointCount() {
-        return getLastCodePoint() - getFirstCodePoint() + 1;
-    }
-
-    int getGlyphWidth(int codePoint);
-
-    int getGlyphHeight(int codePoint);
-
-    int getTextWidth(String text);
-
-    int getTextHeight(String text);
-
-    void draw(FontBatch batch, String text, float x, float y);
+    boolean focused();
 }

@@ -50,6 +50,7 @@ fun game(
     windowWidth: Int = 800,
     windowHeight: Int = 600,
     windowTitle: String? = null,
+    vsync: Boolean = true,
     block: KtGame.() -> Unit
 ) {
     KtGame().apply {
@@ -60,6 +61,7 @@ fun game(
             it.windowWidth = windowWidth
             it.windowHeight = windowHeight
             it.windowTitle = windowTitle
+            it.vsync = vsync
         })
     }
 }
