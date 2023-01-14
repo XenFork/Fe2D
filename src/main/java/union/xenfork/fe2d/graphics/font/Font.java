@@ -32,11 +32,17 @@ public interface Font extends Disposable {
 
     int getLastCodePoint();
 
-    int getCodePointCount();
+    default int getCodePointCount() {
+        return getLastCodePoint() - getFirstCodePoint() + 1;
+    }
 
     int getGlyphWidth(int codePoint);
 
     int getGlyphHeight(int codePoint);
+
+    int getTextWidth(String text);
+
+    int getTextHeight(String text);
 
     void draw(FontBatch batch, String text, float x, float y);
 }

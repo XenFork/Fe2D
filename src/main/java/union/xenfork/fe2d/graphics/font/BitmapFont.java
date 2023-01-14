@@ -20,7 +20,6 @@ package union.xenfork.fe2d.graphics.font;
 
 import org.lwjgl.stb.STBImage;
 import union.xenfork.fe2d.file.FileContext;
-import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.batch.FontBatch;
 import union.xenfork.fe2d.graphics.texture.NativeImage;
 import union.xenfork.fe2d.graphics.texture.Texture;
@@ -30,6 +29,7 @@ import java.util.Map;
 import java.util.function.IntUnaryOperator;
 
 import static org.lwjgl.opengl.GL30C.*;
+import static union.xenfork.fe2d.graphics.GLStateManager.*;
 
 /**
  * The bitmap font that is loaded from an image and glyphs cannot be scaled.
@@ -64,17 +64,13 @@ public class BitmapFont extends Texture implements Font {
         this.lastChar = lastChar;
     }
 
-    public static BitmapFont load(FileContext context,
-                                  int firstChar, int lastChar,
-                                  int meshWidth, int meshHeight,
-                                  IntUnaryOperator widthProvider,
-                                  IntUnaryOperator heightProvider) {
-        NativeImage image = NativeImage.load(context, STBImage.STBI_grey);
-        BitmapFont font = new BitmapFont(image.width(), image.height(), firstChar, lastChar);
-        int currTex = GLStateManager.textureBinding2D();
-        GLStateManager.bindTexture2D(font.id());
+    protected static void initTexture(NativeImage image, BitmapFont font) {
+        int currTex = textureBinding2D();
+        bindTexture2D(font.id());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        int unpackAlign = unpackAlignment();
+        setUnpackAlignment(1);
         glTexImage2D(GL_TEXTURE_2D,
             0,
             GL_R8,
@@ -84,9 +80,20 @@ public class BitmapFont extends Texture implements Font {
             GL_RED,
             GL_UNSIGNED_BYTE,
             image.buffer());
+        setUnpackAlignment(unpackAlign);
         glGenerateMipmap(GL_TEXTURE_2D);
-        GLStateManager.bindTexture2D(currTex);
+        bindTexture2D(currTex);
         image.dispose();
+    }
+
+    public static BitmapFont load(FileContext context,
+                                  int firstChar, int lastChar,
+                                  int meshWidth, int meshHeight,
+                                  IntUnaryOperator widthProvider,
+                                  IntUnaryOperator heightProvider) {
+        NativeImage image = NativeImage.load(context, STBImage.STBI_grey);
+        BitmapFont font = new BitmapFont(image.width(), image.height(), firstChar, lastChar);
+        initTexture(image, font);
         int x = 0;
         int y = 0;
         int width = font.width();
@@ -142,11 +149,6 @@ public class BitmapFont extends Texture implements Font {
     }
 
     @Override
-    public int getCodePointCount() {
-        return lastChar - firstChar + 1;
-    }
-
-    @Override
     public int getGlyphWidth(int codePoint) {
         return glyphWidths.get(codePoint);
     }
@@ -154,6 +156,28 @@ public class BitmapFont extends Texture implements Font {
     @Override
     public int getGlyphHeight(int codePoint) {
         return glyphHeights.get(codePoint);
+    }
+
+    @Override
+    public int getTextWidth(String text) {
+        return text.lines().mapToInt(line -> {
+            int width = 0;
+            for (int i = 0, len = line.codePointCount(0, line.length()); i < len; i++) {
+                width += getGlyphWidth(line.codePointAt(i));
+            }
+            return width;
+        }).max().orElse(0);
+    }
+
+    @Override
+    public int getTextHeight(String text) {
+        return text.lines()
+            .mapToInt(line ->
+                line.codePoints()
+                    .map(this::getGlyphHeight)
+                    .reduce(Integer::max)
+                    .orElse(0)
+            ).sum();
     }
 
     @Override
@@ -168,9 +192,8 @@ public class BitmapFont extends Texture implements Font {
         for (int j = lines.length - 1; j >= 0; j--) {
             String line = lines[j];
             int maxHeight = 0;
-            int len = line.codePointCount(0, line.length());
             float xo = x;
-            for (int i = 0; i < len; i++) {
+            for (int i = 0, len = line.codePointCount(0, line.length()); i < len; i++) {
                 int codePoint = line.codePointAt(i);
                 Texture texture = getTexture(codePoint);
                 // switch texture

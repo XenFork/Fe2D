@@ -20,7 +20,6 @@ package union.xenfork.fe2d.graphics.font;
 
 import org.lwjgl.stb.STBImage;
 import union.xenfork.fe2d.Fe2D;
-import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.texture.NativeImage;
 import union.xenfork.fe2d.graphics.texture.Texture;
 import union.xenfork.fe2d.graphics.texture.TextureParam;
@@ -66,22 +65,7 @@ public final class Unifont extends BitmapFont {
     public static Unifont create(boolean japanese) {
         NativeImage image = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_0.png"), STBImage.STBI_grey);
         Unifont font = new Unifont(japanese);
-        int currTex = GLStateManager.textureBinding2D();
-        GLStateManager.bindTexture2D(font.id());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,
-            0,
-            GL_R8,
-            image.width(),
-            image.height(),
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            image.buffer());
-        glGenerateMipmap(GL_TEXTURE_2D);
-        GLStateManager.bindTexture2D(currTex);
-        image.dispose();
+        initTexture(image, font);
         int x = 0;
         int y = 0;
         int width = font.width();

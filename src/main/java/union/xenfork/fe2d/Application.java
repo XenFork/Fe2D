@@ -43,7 +43,7 @@ import static org.lwjgl.opengl.GL11C.*;
  * @author squid233
  * @since 0.1.0
  */
-public class Application implements Disposable {
+public class Application implements Updatable, Disposable {
     /**
      * The logger that is initialized with the application name.
      */
@@ -244,21 +244,15 @@ public class Application implements Disposable {
     // Loop
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * The fixed updating is performed as a fixed time step. Suitable for physical engine and AI pathfinder.
-     */
+    @Override
     public void fixedUpdate() {
     }
 
-    /**
-     * Updating game objects per frame.
-     */
+    @Override
     public void update() {
     }
 
-    /**
-     * Just updating, but it will be called after {@link #update()}.
-     */
+    @Override
     public void lateUpdate() {
     }
 

@@ -30,6 +30,36 @@ import static org.lwjgl.opengl.GL30C.*;
  */
 public final class GLStateManager {
     ///////////////////////////////////////////////////////////////////////////
+    // Pixel store
+    ///////////////////////////////////////////////////////////////////////////
+
+    private static int unpackAlignment = 4;
+
+    /**
+     * Returns one value, the byte alignment used for reading pixel data from memory. The initial value is 4.
+     *
+     * @return one value, the byte alignment used for reading pixel data from memory. The initial value is 4.
+     * @see #setUnpackAlignment(int)
+     */
+    public static int unpackAlignment() {
+        return unpackAlignment;
+    }
+
+    /**
+     * Specifies the alignment requirements for the start of each pixel row in memory.
+     * The allowable values are 1 (byte-alignment), 2 (rows aligned to even-numbered bytes), 4 (word-alignment),
+     * and 8 (rows start on double-word boundaries).
+     *
+     * @param param Specifies the value that {@link #unpackAlignment() unpackAlignment} is set to.
+     */
+    public static void setUnpackAlignment(int param) {
+        if (unpackAlignment != param) {
+            unpackAlignment = param;
+            glPixelStorei(GL_UNPACK_ALIGNMENT, param);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // Blend
     ///////////////////////////////////////////////////////////////////////////
 

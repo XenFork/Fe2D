@@ -16,38 +16,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d
+package union.xenfork.fe2d;
 
 /**
- * The kotlin application configure.
+ * The updatable element.
  *
  * @author squid233
  * @since 0.1.0
  */
-class KtApplication : Application() {
-}
+public interface Updatable {
+    /**
+     * The fixed updating is performed as a fixed time step. Suitable for physical engine and AI pathfinder.
+     */
+    void fixedUpdate();
 
-/**
- * Creates and launches an application with the given configuration.
- *
- * @see ApplicationConfig
- */
-fun application(
-    useStderr: Boolean = false,
-    applicationName: String = "Fork Engine 2D Game",
-    windowWidth: Int = 800,
-    windowHeight: Int = 600,
-    windowTitle: String? = null,
-    block: KtApplication.() -> Unit
-) {
-    KtApplication().apply {
-        block()
-        launch(ApplicationConfig().also {
-            it.useStderr = useStderr
-            it.applicationName = applicationName
-            it.windowWidth = windowWidth
-            it.windowHeight = windowHeight
-            it.windowTitle = windowTitle
-        })
-    }
+    /**
+     * Updating game objects per frame.
+     */
+    void update();
+
+    /**
+     * Just updating, but it will be called after {@link #update()}.
+     */
+    void lateUpdate();
 }

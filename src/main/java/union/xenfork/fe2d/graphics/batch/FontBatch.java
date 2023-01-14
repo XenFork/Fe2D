@@ -35,6 +35,7 @@ public final class FontBatch extends SpriteBatch {
      * The default value of max characters.
      */
     public static final int DEFAULT_MAX_CHARACTERS = 65535;
+    private final boolean ownsShader;
 
     /**
      * Creates the font batch with the given shader and size.
@@ -44,6 +45,7 @@ public final class FontBatch extends SpriteBatch {
      */
     public FontBatch(@Nullable ShaderProgram defaultShader, int maxCharacters) {
         super(defaultShader != null ? defaultShader : createDefaultShader(), maxCharacters);
+        this.ownsShader = defaultShader == null;
     }
 
     /**
@@ -102,7 +104,7 @@ public final class FontBatch extends SpriteBatch {
             out vec4 FragColor;
             uniform sampler2D %1$s;
             void main() {
-                FragColor = vertexColor * vec4(1.0, 1.0, 1.0, texture(%1$s, UV0).r);
+                FragColor = vec4(vertexColor.rgb, vertexColor.a * texture(%1$s, UV0).r);
             }
             """, ShaderProgram.U_SAMPLER + '0'),
             Sprite.LAYOUT);
@@ -118,5 +120,13 @@ public final class FontBatch extends SpriteBatch {
      */
     public void draw(Font font, String text, float x, float y) {
         font.draw(this, text, x, y);
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        if (ownsShader && shader != null) {
+            shader.dispose();
+        }
     }
 }

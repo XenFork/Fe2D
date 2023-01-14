@@ -23,7 +23,6 @@ import org.joml.Matrix4fc;
 import union.xenfork.fe2d.Disposable;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.ShaderProgram;
-import union.xenfork.fe2d.graphics.sprite.Sprite;
 import union.xenfork.fe2d.graphics.texture.Texture;
 import union.xenfork.fe2d.graphics.texture.TextureRegion;
 
@@ -62,13 +61,6 @@ public interface Batch extends Disposable {
     void draw(Texture texture, float x, float y, float width, float height, TextureRegion region);
 
     void draw(Texture texture, float x, float y, TextureRegion region);
-
-    /**
-     * Draws a sprite.
-     *
-     * @param sprite the sprite to be drawn.
-     */
-    void draw(Sprite sprite);
 
     /**
      * Sets the custom shader.

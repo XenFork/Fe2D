@@ -55,7 +55,7 @@ public class SpriteBatch implements Batch {
     private final Matrix4f projectionMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
     private final Matrix4f combinedMatrix = new Matrix4f();
-    private final ShaderProgram shader;
+    final ShaderProgram shader;
     private ShaderProgram customShader;
     private final boolean ownsShader;
     private int blendSrcRGB = GL_SRC_ALPHA;
@@ -304,7 +304,11 @@ public class SpriteBatch implements Batch {
         draw(texture, x, y, region.u1() - region.u0(), region.v1() - region.v0(), region);
     }
 
-    @Override
+    /**
+     * Draws a sprite.
+     *
+     * @param sprite the sprite to be drawn.
+     */
     public void draw(Sprite sprite) {
         int currColor = spriteColor();
         setSpriteColor(sprite.color);

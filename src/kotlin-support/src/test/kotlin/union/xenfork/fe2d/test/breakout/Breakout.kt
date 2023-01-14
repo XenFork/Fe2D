@@ -18,7 +18,8 @@
 
 package union.xenfork.fe2d.test.breakout
 
-import union.xenfork.fe2d.application
+import org.joml.Matrix4f
+import union.xenfork.fe2d.game
 
 /**
  * breakout game
@@ -26,10 +27,16 @@ import union.xenfork.fe2d.application
  * @author squid233
  * @since 0.1.0
  */
-fun main() = application(
+fun main() = game(
     useStderr = true,
     applicationName = "Breakout",
     windowWidth = 1280,
     windowHeight = 720
 ) {
+    val guiProjMatrix = Matrix4f()
+
+    onResize { width, height, base ->
+        base()
+        guiProjMatrix.setOrtho2D(0f, width.toFloat(), 0f, height.toFloat())
+    }
 }

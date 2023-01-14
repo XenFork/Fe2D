@@ -108,7 +108,6 @@ public class TextureAtlas extends Texture {
      * @see #load(TextureParam, Entry...)
      * @see #load(Entry...)
      */
-    @SuppressWarnings("unchecked")
     public static TextureAtlas load(@Nullable Supplier<@Nullable ByteBuffer> fail, @Nullable TextureParam param, Entry... entries) {
         // Uses array wrapper because lambda cannot modify outside variables
         ByteBuffer[] failBuffer = new ByteBuffer[1];
@@ -125,7 +124,7 @@ public class TextureAtlas extends Texture {
         entryRegion.sort(null);
 
         Packer packer = new GrowingPacker();
-        packer.fit((List<PackerRegion<NativeImage>>) (List<?>) entryRegion);
+        packer.fit(entryRegion);
 
         TextureAtlas atlas = new TextureAtlas(packer.width(), packer.height());
         int currTex = GLStateManager.textureBinding2D();

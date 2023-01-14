@@ -18,13 +18,12 @@
 
 package union.xenfork.fe2d.test.breakout;
 
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector2f;
-import union.xenfork.fe2d.Application;
 import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
+import union.xenfork.fe2d.Game;
 import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
@@ -54,7 +53,7 @@ import static union.xenfork.fe2d.gui.screen.ScreenUtil.*;
  * @author squid233
  * @since 0.1.0
  */
-public final class Breakout extends Application {
+public final class Breakout extends Game {
     private static final int GAME_MENU = 0;
     private static final int GAME_ACTIVE = 1;
     private static final int GAME_WIN = 1;
@@ -116,9 +115,9 @@ public final class Breakout extends Application {
     }
 
     @Override
-    public void onKey(int key, int scancode, @NotNull Input.Action action, int mods) {
-        super.onKey(key, scancode, action, mods);
-        if (action == Input.Action.RELEASE && key == Input.KEY_SPACE) {
+    public void onKeyPress(int key, int scancode, int mods) {
+        super.onKeyPress(key, scancode, mods);
+        if (key == Input.KEY_SPACE) {
             ball.stuck = false;
         }
     }
