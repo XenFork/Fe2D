@@ -32,7 +32,12 @@ public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
     private boolean focused;
 
     @Override
-    public boolean focused() {
+    public boolean isFocused() {
         return focused;
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        this.focused = focused;
     }
 }

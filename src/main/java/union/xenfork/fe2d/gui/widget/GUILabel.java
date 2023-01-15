@@ -16,21 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.gui;
+package union.xenfork.fe2d.gui.widget;
 
 /**
- * The focusable element that can be performed by pressing space key when it is focused.
+ * The GUI label that is a text rendered on the screen.
  *
  * @author squid233
  * @since 0.1.0
  */
-public interface Focusable {
-    /**
-     * Returns {@code true} if this element is isFocused; {@code false} otherwise.
-     *
-     * @return {@code true} if this element is isFocused; {@code false} otherwise.
-     */
-    boolean isFocused();
+public abstract class GUILabel extends GUIWidget {
+    private float x, y;
+    private String text;
 
-    void setFocused(boolean focused);
+    public GUILabel(String text) {
+        this.text = text;
+    }
 }
