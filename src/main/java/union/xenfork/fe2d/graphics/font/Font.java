@@ -18,8 +18,11 @@
 
 package union.xenfork.fe2d.graphics.font;
 
+import org.jetbrains.annotations.Nullable;
 import union.xenfork.fe2d.Disposable;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
+
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 /**
  * The font.
@@ -52,5 +55,9 @@ public interface Font extends Disposable {
 
     int getTextHeight(String text);
 
-    void draw(FontBatch batch, String text, float x, float y);
+    void getGlyphHMetrics(int codePoint, @Nullable IntBuffer advanceWidth, @Nullable IntBuffer leftSideBearing);
+
+    void getGlyphVMetrics(int codePoint, @Nullable IntBuffer ascent, @Nullable IntBuffer descent, @Nullable IntBuffer lineGap);
+
+    void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight, int colorABGR, int codePoint, float x, float y);
 }

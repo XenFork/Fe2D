@@ -69,6 +69,10 @@ public class Texture implements Disposable, PackerRegionSize {
         if (param != null) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param.minFilter());
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param.magFilter());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, param.baseLevel());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, param.maxLevel());
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, param.minLod());
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, param.maxLod());
             for (var e : param.customParamMap().entrySet()) {
                 glTexParameteri(GL_TEXTURE_2D, e.getKey(), e.getValue());
             }
@@ -90,14 +94,14 @@ public class Texture implements Disposable, PackerRegionSize {
         GLStateManager.bindTexture2D(texture.id);
         acceptParameters(param);
         glTexImage2D(GL_TEXTURE_2D,
-            0,
-            internalFormat,
-            image.width(),
-            image.height(),
-            0,
-            format,
-            GL_UNSIGNED_BYTE,
-            image.buffer());
+                0,
+                internalFormat,
+                image.width(),
+                image.height(),
+                0,
+                format,
+                GL_UNSIGNED_BYTE,
+                image.buffer());
         glGenerateMipmap(GL_TEXTURE_2D);
         GLStateManager.bindTexture2D(currTex);
         return texture;

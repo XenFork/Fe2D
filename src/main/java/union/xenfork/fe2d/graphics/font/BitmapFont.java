@@ -19,17 +19,15 @@
 package union.xenfork.fe2d.graphics.font;
 
 import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryUtil;
 import union.xenfork.fe2d.file.FileContext;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
+import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.texture.NativeImage;
-import union.xenfork.fe2d.graphics.texture.Texture;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntUnaryOperator;
-
-import static org.lwjgl.opengl.GL30C.*;
-import static union.xenfork.fe2d.graphics.GLStateManager.*;
 
 /**
  * The bitmap font that is loaded from an image. The glyphs cannot be scaled.
@@ -41,45 +39,23 @@ import static union.xenfork.fe2d.graphics.GLStateManager.*;
  * @author squid233
  * @since 0.1.0
  */
-public class BitmapFont extends Texture implements Font {
+public class BitmapFont implements Font {
     private final String codePoints;
+    private final ByteBuffer image;
     protected final Map<Integer, Integer> glyphU = new HashMap<>();
     protected final Map<Integer, Integer> glyphV = new HashMap<>();
     private final Map<Integer, Integer> glyphWidths = new HashMap<>();
     private final Map<Integer, Integer> glyphHeights = new HashMap<>();
 
     /**
-     * Creates a bitmap font texture with the given size and codepoints.
+     * Creates a bitmap font with the given image and codepoints.
      *
-     * @param width      the width of the texture.
-     * @param height     the height of the texture.
+     * @param image      the image.
      * @param codePoints the codepoints that can be rendered with this texture.
      */
-    protected BitmapFont(int width, int height, String codePoints) {
-        super(width, height);
+    protected BitmapFont(ByteBuffer image, String codePoints) {
+        this.image = image;
         this.codePoints = codePoints;
-    }
-
-    protected static void initTexture(NativeImage image, BitmapFont font) {
-        int currTex = textureBinding2D();
-        bindTexture2D(font.id());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        int unpackAlign = unpackAlignment();
-        setUnpackAlignment(1);
-        glTexImage2D(GL_TEXTURE_2D,
-            0,
-            GL_R8,
-            image.width(),
-            image.height(),
-            0,
-            GL_RED,
-            GL_UNSIGNED_BYTE,
-            image.buffer());
-        setUnpackAlignment(unpackAlign);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        bindTexture2D(currTex);
-        image.dispose();
     }
 
     public static BitmapFont load(FileContext context,
@@ -88,13 +64,13 @@ public class BitmapFont extends Texture implements Font {
                                   int meshWidth, int meshHeight,
                                   IntUnaryOperator widthProvider,
                                   IntUnaryOperator heightProvider) {
+        // image is managed by font
         NativeImage image = NativeImage.load(context, STBImage.STBI_grey);
-        BitmapFont font = new BitmapFont(image.width(), image.height(), codePoints);
-        initTexture(image, font);
+        BitmapFont font = new BitmapFont(image.buffer(), codePoints);
         int x = 0;
         int y = 0;
-        int width = font.width();
-        int height = font.height();
+        int width = image.width();
+        int height = image.height();
         for (int i = firstChar; i <= lastChar; i++) {
             if (!font.isGlyphEmpty(i)) {
                 font.glyphU.put(i, x);
@@ -130,13 +106,13 @@ public class BitmapFont extends Texture implements Font {
     }
 
     /**
-     * Gets the texture for the given codepoint.
+     * Gets the image for the given codepoint.
      *
      * @param codePoint the codepoint.
-     * @return the texture.
+     * @return the image.
      */
-    protected Texture getTexture(int codePoint) {
-        return this;
+    protected ByteBuffer getImage(int codePoint) {
+        return image;
     }
 
     @Override
@@ -177,52 +153,44 @@ public class BitmapFont extends Texture implements Font {
     }
 
     @Override
-    public void draw(FontBatch batch, String text, float x, float y) {
-        String[] lines = text.lines().toArray(String[]::new);
-
-        float yo = y;
-        float invTexWidth = 0f;
-        float invTexHeight = 0f;
-        Texture thisTexture = null;
-
-        for (int j = lines.length - 1; j >= 0; j--) {
-            String line = lines[j];
-            int maxHeight = 0;
-            float xo = x;
-            for (int i = 0, len = line.codePointCount(0, line.length()); i < len; i++) {
-                int codePoint = line.codePointAt(i);
-                Texture texture = getTexture(codePoint);
-                // switch texture
-                if (thisTexture != texture) {
-                    thisTexture = texture;
-                    invTexWidth = 1f / thisTexture.width();
-                    invTexHeight = 1f / thisTexture.height();
-                }
-                // if codepoint is not available, use white square
-                if (isGlyphEmpty(codePoint)) {
-                    // if white square is not available, use space
-                    if (isGlyphEmpty(WHITE_SQUARE)) {
-                        codePoint = ' ';
-                    } else {
-                        codePoint = WHITE_SQUARE;
-                    }
-                }
-                int u = glyphU.get(codePoint);
-                int v = glyphV.get(codePoint);
-                int width = getGlyphWidth(codePoint);
-                int height = getGlyphHeight(codePoint);
-                if (height > maxHeight) {
-                    maxHeight = height;
-                }
-                batch.draw(thisTexture,
-                    xo, yo,
-                    width, height,
-                    u * invTexWidth, v * invTexHeight,
-                    (u + width) * invTexWidth, (v + height) * invTexHeight
-                );
-                xo += width;
+    public void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight, int colorABGR, int codePoint, float x, float y) {
+        // if codepoint is not available, use white square
+        if (isGlyphEmpty(codePoint)) {
+            // if white square is not available, use space
+            if (isGlyphEmpty(WHITE_SQUARE)) {
+                codePoint = ' ';
+            } else {
+                codePoint = WHITE_SQUARE;
             }
-            yo += maxHeight;
         }
+        ByteBuffer image = getImage(codePoint);
+        int u = glyphU.get(codePoint);
+        int v = glyphV.get(codePoint);
+        int width = getGlyphWidth(codePoint);
+        int height = getGlyphHeight(codePoint);
+        int ix = Math.round(x);
+        int iy = Math.round(y);
+        for (int j = iy, maxY = iy + height; j < maxY; j++) {
+            for (int i = ix, maxX = ix + width; i < maxX; i++) {
+                if (i >= 0 && i < bufWidth && j >= 0 && j < bufHeight) {
+                    int index = j * bufWidth + i;
+                    buffer.put(index, (Color.getRedFromABGR(colorABGR)))
+                        .put(index + 1, (Color.getBlueFromABGR(colorABGR)))
+                        .put(index + 2, (Color.getGreenFromABGR(colorABGR)))
+                        // sampling
+                        .put(index + 3,
+                            // j = iy + 0 -> v = v + 0, j = maxY = iy + height -> v = v + height
+                            (byte) (
+                                (image.get((v + j - iy) * width + (u + i - ix)) *
+                                 ((int) Color.getAlphaFromABGR(colorABGR))) / 255
+                            ));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        MemoryUtil.memFree(image);
     }
 }

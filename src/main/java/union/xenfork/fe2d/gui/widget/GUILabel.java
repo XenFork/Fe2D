@@ -19,8 +19,8 @@
 package union.xenfork.fe2d.gui.widget;
 
 import union.xenfork.fe2d.Fe2D;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
 import union.xenfork.fe2d.graphics.font.Font;
+import union.xenfork.fe2d.graphics.font.TextRenderer;
 
 /**
  * The GUI label which is a text rendered on the screen.
@@ -70,7 +70,7 @@ public class GUILabel extends GUIWidget {
      */
     @Override
     public void render(double delta, double cursorX, double cursorY) {
-        FontBatch renderer = Fe2D.textRenderer();
+        TextRenderer renderer = Fe2D.textRenderer();
         boolean notDrawing = !renderer.isDrawing();
         if (notDrawing) {
             renderer.begin();

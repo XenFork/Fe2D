@@ -24,7 +24,7 @@ package union.xenfork.fe2d.graphics.font;
  * @author squid233
  * @since 0.1.0
  */
-public final class TrueTypeFont implements Font {
+public final class TrueTypeFont /*implements Font*/ {
 //    private final int firstCodePoint;
 //    private final int lastCodePoint;
     private final String codePoints;
@@ -33,8 +33,8 @@ public final class TrueTypeFont implements Font {
         this.codePoints = codePoints;
     }
 
-    @Override
+    /*@Override
     public String getFontCodePoints() {
         return codePoints;
-    }
+    }*/
 }

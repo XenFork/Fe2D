@@ -19,12 +19,11 @@
 package union.xenfork.fe2d.graphics.font;
 
 import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryUtil;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.texture.NativeImage;
-import union.xenfork.fe2d.graphics.texture.Texture;
-import union.xenfork.fe2d.graphics.texture.TextureParam;
 
-import static org.lwjgl.opengl.GL30C.*;
+import java.nio.ByteBuffer;
 
 /**
  * The unifont bitmap font.
@@ -36,11 +35,10 @@ import static org.lwjgl.opengl.GL30C.*;
  */
 public final class Unifont extends BitmapFont {
     private static final String AVAILABLE_CODEPOINTS;
-    private static final TextureParam PARAM = new TextureParam().minFilter(GL_NEAREST).magFilter(GL_NEAREST);
     private static final int MESH_SIZE = 16;
     private final boolean japanese;
-    private final Texture plane0jp;
-    private final Texture plane1;
+    private final ByteBuffer plane0jp;
+    private final ByteBuffer plane1;
 
     static {
         StringBuilder sb = new StringBuilder(0x1f7fe);
@@ -51,19 +49,15 @@ public final class Unifont extends BitmapFont {
         AVAILABLE_CODEPOINTS = sb.toString();
     }
 
-    private Unifont(boolean japanese) {
-        super(4096, 4096, AVAILABLE_CODEPOINTS);
+    private Unifont(ByteBuffer image, boolean japanese) {
+        super(image, AVAILABLE_CODEPOINTS);
         this.japanese = japanese;
         if (japanese) {
-            NativeImage image = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_0_jp.png"), STBImage.STBI_grey);
-            plane0jp = ofImage(image, PARAM, GL_R8, GL_RED);
-            image.dispose();
+            plane0jp = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_0_jp.png"), STBImage.STBI_grey).buffer();
         } else {
             plane0jp = null;
         }
-        NativeImage image = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_1.png"), STBImage.STBI_grey);
-        plane1 = ofImage(image, PARAM, GL_R8, GL_RED);
-        image.dispose();
+        plane1 = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_1.png"), STBImage.STBI_grey).buffer();
     }
 
     /**
@@ -73,13 +67,13 @@ public final class Unifont extends BitmapFont {
      * @return the unifont.
      */
     public static Unifont create(boolean japanese) {
+        // image is managed by font
         NativeImage image = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_0.png"), STBImage.STBI_grey);
-        Unifont font = new Unifont(japanese);
-        initTexture(image, font);
+        Unifont font = new Unifont(image.buffer(), japanese);
         int x = 0;
         int y = 0;
-        int width = font.width();
-        int height = font.height();
+        int width = image.width();
+        int height = image.height();
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j <= 0xffff; j++) {
                 int codePoint = j | (i << 16);
@@ -110,14 +104,14 @@ public final class Unifont extends BitmapFont {
     }
 
     @Override
-    protected Texture getTexture(int codePoint) {
+    protected ByteBuffer getImage(int codePoint) {
         if (codePoint >= 0x10000) {
             return plane1;
         }
         if (japanese) {
             return plane0jp;
         }
-        return super.getTexture(codePoint);
+        return super.getImage(codePoint);
     }
 
     @Override
@@ -143,8 +137,8 @@ public final class Unifont extends BitmapFont {
     public void dispose() {
         super.dispose();
         if (plane0jp != null) {
-            plane0jp.dispose();
+            MemoryUtil.memFree(plane0jp);
         }
-        plane1.dispose();
+        MemoryUtil.memFree(plane1);
     }
 }

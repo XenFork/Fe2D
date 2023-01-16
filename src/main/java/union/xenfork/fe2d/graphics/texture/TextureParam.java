@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11C.GL_LINEAR;
-import static org.lwjgl.opengl.GL11C.GL_NEAREST_MIPMAP_LINEAR;
+import static org.lwjgl.opengl.GL11C.GL_NEAREST;
 
 /**
  * The texture parameters.
@@ -33,8 +33,12 @@ import static org.lwjgl.opengl.GL11C.GL_NEAREST_MIPMAP_LINEAR;
  * @since 0.1.0
  */
 public final class TextureParam {
-    private int minFilter = GL_NEAREST_MIPMAP_LINEAR;
+    private int minFilter = GL_NEAREST;
     private int magFilter = GL_LINEAR;
+    private int baseLevel = 0;
+    private int maxLevel = 0;
+    private float minLod = 0f;
+    private float maxLod = 0f;
     private final Map<Integer, Integer> customParam = new HashMap<>();
 
     /**
@@ -85,6 +89,86 @@ public final class TextureParam {
      */
     public int magFilter() {
         return magFilter;
+    }
+
+    /**
+     * Sets the base level value.
+     *
+     * @param baseLevel the base level value.
+     * @return this.
+     */
+    public TextureParam baseLevel(int baseLevel) {
+        this.baseLevel = baseLevel;
+        return this;
+    }
+
+    /**
+     * Gets the base level value.
+     *
+     * @return the base level value.
+     */
+    public int baseLevel() {
+        return baseLevel;
+    }
+
+    /**
+     * Sets the max level value.
+     *
+     * @param maxLevel the max level value.
+     * @return this.
+     */
+    public TextureParam maxLevel(int maxLevel) {
+        this.maxLevel = maxLevel;
+        return this;
+    }
+
+    /**
+     * Gets the max level value.
+     *
+     * @return the max level value.
+     */
+    public int maxLevel() {
+        return maxLevel;
+    }
+
+    /**
+     * Sets the min lod value.
+     *
+     * @param minLod the min lod value.
+     * @return this.
+     */
+    public TextureParam minLod(float minLod) {
+        this.minLod = minLod;
+        return this;
+    }
+
+    /**
+     * Gets the min lod value.
+     *
+     * @return the min lod value.
+     */
+    public float minLod() {
+        return minLod;
+    }
+
+    /**
+     * Sets the max lod value.
+     *
+     * @param maxLod the max lod value.
+     * @return this.
+     */
+    public TextureParam maxLod(float maxLod) {
+        this.maxLod = maxLod;
+        return this;
+    }
+
+    /**
+     * Gets the max lod value.
+     *
+     * @return the max lod value.
+     */
+    public float maxLod() {
+        return maxLod;
     }
 
     /**

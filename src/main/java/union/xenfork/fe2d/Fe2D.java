@@ -23,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import union.xenfork.fe2d.file.FileLoader;
 import union.xenfork.fe2d.graphics.Graphics;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
 import union.xenfork.fe2d.graphics.font.Font;
+import union.xenfork.fe2d.graphics.font.TextRenderer;
 import union.xenfork.fe2d.graphics.font.Unifont;
 
 /**
@@ -66,11 +66,7 @@ public final class Fe2D {
      * The global timer.
      */
     public static Timer timer;
-    /**
-     * The free type library handle.
-     */
-    public static long freeTypeLibrary;
-    private static FontBatch fontBatch;
+    private static TextRenderer textRenderer;
     private static Unifont unifont;
 
     /**
@@ -79,7 +75,7 @@ public final class Fe2D {
      * @return {@code true} if the text renderer is created.
      */
     public static boolean hasTextRenderer() {
-        return fontBatch != null;
+        return textRenderer != null;
     }
 
     /**
@@ -87,11 +83,11 @@ public final class Fe2D {
      *
      * @return the text renderer.
      */
-    public static FontBatch textRenderer() {
-        if (fontBatch == null) {
-            fontBatch = new FontBatch();
+    public static TextRenderer textRenderer() {
+        if (textRenderer == null) {
+            textRenderer = TextRenderer.getInstance();
         }
-        return fontBatch;
+        return textRenderer;
     }
 
     /**
@@ -111,8 +107,8 @@ public final class Fe2D {
      */
     public static void dispose() {
         assets.dispose();
-        if (fontBatch != null) {
-            fontBatch.dispose();
+        if (textRenderer != null) {
+            textRenderer.dispose();
         }
         if (unifont != null) {
             unifont.dispose();

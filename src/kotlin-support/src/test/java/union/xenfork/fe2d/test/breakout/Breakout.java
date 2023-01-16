@@ -28,8 +28,8 @@ import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
 import union.xenfork.fe2d.graphics.batch.SpriteBatch;
+import union.xenfork.fe2d.graphics.font.TextRenderer;
 import union.xenfork.fe2d.graphics.font.Unifont;
 import union.xenfork.fe2d.graphics.mesh.GeometryMesh;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
@@ -283,7 +283,7 @@ public final class Breakout extends Game {
         batch.draw(ball);
         batch.end();
 
-        FontBatch renderer = Fe2D.textRenderer();
+        TextRenderer renderer = Fe2D.textRenderer();
         renderer.begin();
         renderer.draw(unifont,
             """
