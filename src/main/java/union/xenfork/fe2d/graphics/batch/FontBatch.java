@@ -27,9 +27,11 @@ import union.xenfork.fe2d.graphics.vertex.VertexAttribute;
 /**
  * The font batch.
  *
+ * @deprecated The font batch is deprecated for removal because it will be replaced with TextRenderer.
  * @author squid233
  * @since 0.1.0
  */
+@Deprecated(since = "0.1.0", forRemoval = true)
 public final class FontBatch extends SpriteBatch {
     /**
      * The default value of max characters.

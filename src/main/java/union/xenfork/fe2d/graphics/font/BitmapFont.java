@@ -32,32 +32,32 @@ import static org.lwjgl.opengl.GL30C.*;
 import static union.xenfork.fe2d.graphics.GLStateManager.*;
 
 /**
- * The bitmap font that is loaded from an image and glyphs cannot be scaled.
+ * The bitmap font that is loaded from an image. The glyphs cannot be scaled.
  * <p>
- * This is not recommend, and you should use true-type font that is more flexible.
+ * This is not recommend, and you should use the true-type font that is more flexible.
+ * <p>
+ * The bitmap font is non-scalable, excepts {@link Unifont}, it can be proportional scaled.
  *
  * @author squid233
  * @since 0.1.0
  */
 public class BitmapFont extends Texture implements Font {
-    private final int firstChar, lastChar;
+    private final String codePoints;
     protected final Map<Integer, Integer> glyphU = new HashMap<>();
     protected final Map<Integer, Integer> glyphV = new HashMap<>();
     private final Map<Integer, Integer> glyphWidths = new HashMap<>();
     private final Map<Integer, Integer> glyphHeights = new HashMap<>();
 
     /**
-     * Creates a bitmap font texture with the given size and codepoint.
+     * Creates a bitmap font texture with the given size and codepoints.
      *
-     * @param width     the width of the texture.
-     * @param height    the height of the texture.
-     * @param firstChar the first codepoint (inclusive).
-     * @param lastChar  the last codepoint (inclusive).
+     * @param width      the width of the texture.
+     * @param height     the height of the texture.
+     * @param codePoints the codepoints that can be rendered with this texture.
      */
-    protected BitmapFont(int width, int height, int firstChar, int lastChar) {
+    protected BitmapFont(int width, int height, String codePoints) {
         super(width, height);
-        this.firstChar = firstChar;
-        this.lastChar = lastChar;
+        this.codePoints = codePoints;
     }
 
     protected static void initTexture(NativeImage image, BitmapFont font) {
@@ -83,22 +83,25 @@ public class BitmapFont extends Texture implements Font {
     }
 
     public static BitmapFont load(FileContext context,
+                                  String codePoints,
                                   int firstChar, int lastChar,
                                   int meshWidth, int meshHeight,
                                   IntUnaryOperator widthProvider,
                                   IntUnaryOperator heightProvider) {
         NativeImage image = NativeImage.load(context, STBImage.STBI_grey);
-        BitmapFont font = new BitmapFont(image.width(), image.height(), firstChar, lastChar);
+        BitmapFont font = new BitmapFont(image.width(), image.height(), codePoints);
         initTexture(image, font);
         int x = 0;
         int y = 0;
         int width = font.width();
         int height = font.height();
         for (int i = firstChar; i <= lastChar; i++) {
-            font.glyphU.put(i, x);
-            font.glyphV.put(i, y);
-            font.glyphWidths.put(i, widthProvider.applyAsInt(i));
-            font.glyphHeights.put(i, heightProvider.applyAsInt(i));
+            if (!font.isGlyphEmpty(i)) {
+                font.glyphU.put(i, x);
+                font.glyphV.put(i, y);
+                font.glyphWidths.put(i, widthProvider.applyAsInt(i));
+                font.glyphHeights.put(i, heightProvider.applyAsInt(i));
+            }
             x += meshWidth;
             if (x >= width) {
                 x = 0;
@@ -112,12 +115,14 @@ public class BitmapFont extends Texture implements Font {
     }
 
     public static BitmapFont load(FileContext context,
+                                  String codePoints,
                                   int firstChar, int lastChar,
                                   int meshWidth, int meshHeight,
                                   int defaultWidth, int defaultHeight,
                                   Map<Integer, Integer> specialWidth,
                                   Map<Integer, Integer> specialHeight) {
         return load(context,
+            codePoints,
             firstChar, lastChar,
             meshWidth, meshHeight,
             codePoint -> specialWidth.getOrDefault(codePoint, defaultWidth),
@@ -135,13 +140,8 @@ public class BitmapFont extends Texture implements Font {
     }
 
     @Override
-    public int getFirstCodePoint() {
-        return firstChar;
-    }
-
-    @Override
-    public int getLastCodePoint() {
-        return lastChar;
+    public String getFontCodePoints() {
+        return codePoints;
     }
 
     @Override
@@ -199,9 +199,9 @@ public class BitmapFont extends Texture implements Font {
                     invTexHeight = 1f / thisTexture.height();
                 }
                 // if codepoint is not available, use white square
-                if (codePoint < getFirstCodePoint() || codePoint > getLastCodePoint()) {
+                if (isGlyphEmpty(codePoint)) {
                     // if white square is not available, use space
-                    if (WHITE_SQUARE < getFirstCodePoint() || WHITE_SQUARE > getLastCodePoint()) {
+                    if (isGlyphEmpty(WHITE_SQUARE)) {
                         codePoint = ' ';
                     } else {
                         codePoint = WHITE_SQUARE;

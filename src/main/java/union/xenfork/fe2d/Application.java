@@ -20,13 +20,17 @@ package union.xenfork.fe2d;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.system.APIUtil;
+import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.util.freetype.FreeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11C.*;
+import static org.lwjgl.util.freetype.FreeType.*;
 
 /**
  * The application which is the entrypoint of a game.
@@ -73,6 +77,9 @@ public class Application implements Updatable, Disposable {
      * @param config the configuration.
      */
     public void launch(ApplicationConfig config) {
+        Configuration.HARFBUZZ_LIBRARY_NAME.set(FreeType.getLibrary());
+
+        Fe2D.application = this;
         logger = LoggerFactory.getLogger(config.applicationName);
         GLFWErrorCallback.create(new GLFWErrorCallbackI() {
             private final Map<Integer, String> ERROR_CODES =
@@ -111,9 +118,24 @@ public class Application implements Updatable, Disposable {
                 try {
                     Fe2D.input = new Input(window);
 
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        PointerBuffer ft = stack.callocPointer(1);
+                        if (FT_Init_FreeType(ft) != FT_Err_Ok) {
+                            throw new IllegalStateException("Failed to initialize FreeType Library");
+                        }
+                        Fe2D.freeTypeLibrary = ft.get(0);
+                    }
+
                     // Sets callbacks
                     glfwSetFramebufferSizeCallback(window, (handle, width, height) -> {
                         Fe2D.graphics.setSize(width, height);
+                        if (Fe2D.hasTextRenderer()) {
+                            Fe2D.textRenderer().setProjectionMatrix(
+                                Fe2D.textRenderer()
+                                    .projectionMatrix()
+                                    .setOrtho2D(0, width, 0, height)
+                            );
+                        }
                         onResize(width, height);
                     });
                     glfwSetCursorPosCallback(window, (handle, xpos, ypos) -> {
@@ -127,10 +149,9 @@ public class Application implements Updatable, Disposable {
                             default -> Input.Action.RELEASE;
                         }, mods));
                     glfwSetMouseButtonCallback(window, (handle, button, action, mods) ->
-                        onMouseButton(button, switch (action) {
-                            case GLFW_PRESS -> Input.Action.PRESS;
-                            default -> Input.Action.RELEASE;
-                        }, mods));
+                        onMouseButton(button,
+                            action == GLFW_PRESS ? Input.Action.PRESS : Input.Action.RELEASE,
+                            mods));
 
                     // Makes center
                     //if (config.windowMonitor != MemoryUtil.NULL) {
@@ -153,7 +174,7 @@ public class Application implements Updatable, Disposable {
                         IntBuffer ph = stack.callocInt(1);
                         glfwGetFramebufferSize(window, pw, ph);
                         Fe2D.graphics.setSize(pw.get(0), ph.get(0));
-                        glViewport(0, 0, pw.get(0), ph.get(0));
+                        GL11C.glViewport(0, 0, pw.get(0), ph.get(0));
                     }
                     init();
 
@@ -171,8 +192,9 @@ public class Application implements Updatable, Disposable {
                         Fe2D.graphics.setDeltaFrameTime(currTime - time);
                         time = currTime;
                     }
-                    Fe2D.assets.dispose();
+                    Fe2D.dispose();
                     dispose();
+                    FT_Done_FreeType(Fe2D.freeTypeLibrary);
                 } finally {
                     glfwDestroyWindow(window);
                 }
@@ -195,7 +217,7 @@ public class Application implements Updatable, Disposable {
      * @param height the new height, in pixels, of the framebuffer.
      */
     public void onResize(int width, int height) {
-        glViewport(0, 0, width, height);
+        GL11C.glViewport(0, 0, width, height);
     }
 
     /**

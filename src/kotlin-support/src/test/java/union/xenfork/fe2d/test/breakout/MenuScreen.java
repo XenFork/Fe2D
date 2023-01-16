@@ -16,41 +16,42 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.graphics.font;
+package union.xenfork.fe2d.test.breakout;
 
-import union.xenfork.fe2d.Disposable;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
+import union.xenfork.fe2d.gui.screen.Screen;
+import union.xenfork.fe2d.gui.widget.GUILabel;
 
 /**
- * The font.
+ * the menu screen.
  *
  * @author squid233
  * @since 0.1.0
  */
-public interface Font extends Disposable {
+public final class MenuScreen extends Screen {
+    private GUILabel label;
+
     /**
-     * The white square/blank quad character.
+     * Creates the screen.
      */
-    int WHITE_SQUARE = '□';
-
-    String getFontCodePoints();
-
-    default int getCodePointCount() {
-        String codePoints = getFontCodePoints();
-        return codePoints.codePointCount(0, codePoints.length());
+    public MenuScreen() {
+        super(null);
     }
 
-    default boolean isGlyphEmpty(int codePoint) {
-        return getFontCodePoints().indexOf(codePoint) == -1;
+    @Override
+    protected void init() {
+        super.init();
+        label = addWidget(new GUILabel("Press ENTER to start"));
     }
 
-    int getGlyphWidth(int codePoint);
+    @Override
+    public void onResize(int width, int height) {
+        super.onResize(width, height);
+        label.setPosition((width - label.width()) * .5f,
+            (height - label.height()) * .5f);
+    }
 
-    int getGlyphHeight(int codePoint);
-
-    int getTextWidth(String text);
-
-    int getTextHeight(String text);
-
-    void draw(FontBatch batch, String text, float x, float y);
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
+    }
 }

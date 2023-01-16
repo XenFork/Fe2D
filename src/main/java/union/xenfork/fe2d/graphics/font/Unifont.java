@@ -35,14 +35,24 @@ import static org.lwjgl.opengl.GL30C.*;
  * @since 0.1.0
  */
 public final class Unifont extends BitmapFont {
+    private static final String AVAILABLE_CODEPOINTS;
     private static final TextureParam PARAM = new TextureParam().minFilter(GL_NEAREST).magFilter(GL_NEAREST);
     private static final int MESH_SIZE = 16;
     private final boolean japanese;
     private final Texture plane0jp;
     private final Texture plane1;
 
+    static {
+        StringBuilder sb = new StringBuilder(0x1f7fe);
+        for (int i = 0; i <= 0x1fffd; i++) {
+            if (i < 0x10000 && Character.isSurrogate((char) i)) continue;
+            sb.appendCodePoint(i);
+        }
+        AVAILABLE_CODEPOINTS = sb.toString();
+    }
+
     private Unifont(boolean japanese) {
-        super(4096, 4096, 0, 0x1fffd);
+        super(4096, 4096, AVAILABLE_CODEPOINTS);
         this.japanese = japanese;
         if (japanese) {
             NativeImage image = NativeImage.load(Fe2D.files.internal("_fe2d/texture/font/unifont_0_jp.png"), STBImage.STBI_grey);
@@ -70,15 +80,20 @@ public final class Unifont extends BitmapFont {
         int y = 0;
         int width = font.width();
         int height = font.height();
-        for (int i = font.getFirstCodePoint(), last = font.getLastCodePoint(); i <= last; i++) {
-            font.glyphU.put(i, x);
-            font.glyphV.put(i, y);
-            x += MESH_SIZE;
-            if (x >= width) {
-                x = 0;
-                y += MESH_SIZE;
-                if (y >= height) {
-                    y = 0;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j <= 0xffff; j++) {
+                int codePoint = j | (i << 16);
+                if (!font.isGlyphEmpty(codePoint)) {
+                    font.glyphU.put(codePoint, x);
+                    font.glyphV.put(codePoint, y);
+                }
+                x += MESH_SIZE;
+                if (x >= width) {
+                    x = 0;
+                    y += MESH_SIZE;
+                    if (y >= height) {
+                        y = 0;
+                    }
                 }
             }
         }
@@ -103,6 +118,11 @@ public final class Unifont extends BitmapFont {
             return plane0jp;
         }
         return super.getTexture(codePoint);
+    }
+
+    @Override
+    public boolean isGlyphEmpty(int codePoint) {
+        return codePoint < 0x10000 ? Character.isSurrogate((char) codePoint) : super.isGlyphEmpty(codePoint);
     }
 
     @Override

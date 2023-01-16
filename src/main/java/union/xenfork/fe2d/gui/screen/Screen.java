@@ -18,11 +18,14 @@
 
 package union.xenfork.fe2d.gui.screen;
 
+import org.jetbrains.annotations.Nullable;
+import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.Updatable;
 import union.xenfork.fe2d.gui.Drawable;
 import union.xenfork.fe2d.gui.GUIElement;
 import union.xenfork.fe2d.gui.GUIParentElement;
+import union.xenfork.fe2d.gui.widget.GUIWidget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,11 @@ import java.util.List;
  */
 public abstract class Screen implements GUIParentElement, Drawable, Updatable {
     private final List<GUIElement> children = new ArrayList<>();
+    private final List<GUIWidget> widgets = new ArrayList<>();
+    /**
+     * The parent/previous screen that opened this screen.
+     */
+    protected final @Nullable Screen parent;
     /**
      * The width of this screen.
      */
@@ -43,6 +51,19 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
      * The height of this screen.
      */
     protected int height;
+    /**
+     * The index of the focused widget. It will be reset to -1 if it is &ge; the size of widgets.
+     */
+    protected int focusIndex = -1;
+
+    /**
+     * Creates the screen with the given parent screen.
+     *
+     * @param parent the parent screen.
+     */
+    public Screen(@Nullable Screen parent) {
+        this.parent = parent;
+    }
 
     /**
      * Initializes this screen with the given size.
@@ -51,8 +72,8 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
      * @param height the height of this screen.
      */
     public void init(int width, int height) {
-        onResize(width, height);
         init();
+        onResize(width, height);
     }
 
     /**
@@ -101,11 +122,13 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
 
     @Override
     public void render(double delta, double cursorX, double cursorY) {
+        Fe2D.textRenderer().begin();
         for (GUIElement element : children()) {
             if (element instanceof Drawable drawable) {
                 drawable.render(delta, cursorX, cursorY);
             }
         }
+        Fe2D.textRenderer().end();
     }
 
     /**
@@ -114,6 +137,9 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
      * @see #shouldCloseOnEsc()
      */
     public void onClose() {
+        if (Fe2D.game != null) {
+            Fe2D.game.openScreen(parent);
+        }
     }
 
     /**
@@ -140,8 +166,29 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
      * @return the element.
      */
     protected <T extends GUIElement> T addElement(T element) {
-        children.add(element);
+        children().add(element);
         return element;
+    }
+
+    /**
+     * Adds a widget to this screen.
+     *
+     * @param widget the widget to be added.
+     * @param <T>    the type of the widget.
+     * @return the widget.
+     */
+    protected <T extends GUIWidget> T addWidget(T widget) {
+        widgets().add(widget);
+        return addElement(widget);
+    }
+
+    /**
+     * Gets the focused widget.
+     *
+     * @return the focused widget.
+     */
+    protected GUIWidget getFocusedWidget() {
+        return widgets().get(focusIndex);
     }
 
     @Override
@@ -150,11 +197,37 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
             onClose();
             return true;
         }
+        if (key == Input.KEY_TAB) {
+            if (focusIndex != -1) {
+                getFocusedWidget().setFocused(false);
+            }
+            focusIndex++;
+            if (focusIndex >= widgets().size()) {
+                focusIndex = -1;
+            } else {
+                getFocusedWidget().setFocused(true);
+            }
+            return true;
+        }
+        if (key == Input.KEY_ENTER) {
+            if (focusIndex != -1) {
+                return getFocusedWidget().perform();
+            }
+        }
         return GUIParentElement.super.onKeyPress(key, scancode, mods);
     }
 
     @Override
     public List<GUIElement> children() {
         return children;
+    }
+
+    /**
+     * Gets the widgets.
+     *
+     * @return the widgets.
+     */
+    public List<GUIWidget> widgets() {
+        return widgets;
     }
 }

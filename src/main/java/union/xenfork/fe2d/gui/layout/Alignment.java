@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.graphics.font;
+package union.xenfork.fe2d.gui.layout;
 
 /**
  * The alignment of a text to be drawn.

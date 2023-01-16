@@ -18,10 +18,14 @@
 
 package union.xenfork.fe2d;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import union.xenfork.fe2d.file.FileLoader;
 import union.xenfork.fe2d.graphics.Graphics;
+import union.xenfork.fe2d.graphics.batch.FontBatch;
+import union.xenfork.fe2d.graphics.font.Font;
+import union.xenfork.fe2d.graphics.font.Unifont;
 
 /**
  * The global objects of Fork Engine 2D.
@@ -47,6 +51,14 @@ public final class Fe2D {
      */
     public static final Logger logger = LoggerFactory.getLogger("Fork Engine 2D");
     /**
+     * The current application instance.
+     */
+    public static Application application;
+    /**
+     * The current {@link #application} instance as {@link Game}.
+     */
+    public static @Nullable Game game;
+    /**
      * The input.
      */
     public static Input input;
@@ -54,4 +66,56 @@ public final class Fe2D {
      * The global timer.
      */
     public static Timer timer;
+    /**
+     * The free type library handle.
+     */
+    public static long freeTypeLibrary;
+    private static FontBatch fontBatch;
+    private static Unifont unifont;
+
+    /**
+     * Returns {@code true} if the text renderer is created.
+     *
+     * @return {@code true} if the text renderer is created.
+     */
+    public static boolean hasTextRenderer() {
+        return fontBatch != null;
+    }
+
+    /**
+     * Gets the text renderer, or creates a new if it is not created.
+     *
+     * @return the text renderer.
+     */
+    public static FontBatch textRenderer() {
+        if (fontBatch == null) {
+            fontBatch = new FontBatch();
+        }
+        return fontBatch;
+    }
+
+    /**
+     * Gets the default font, or creates Unifont if it is not created.
+     *
+     * @return the default font.
+     */
+    public static Font defaultFont() {
+        if (unifont == null) {
+            unifont = Unifont.create();
+        }
+        return unifont;
+    }
+
+    /**
+     * Disposes the global resources.
+     */
+    public static void dispose() {
+        assets.dispose();
+        if (fontBatch != null) {
+            fontBatch.dispose();
+        }
+        if (unifont != null) {
+            unifont.dispose();
+        }
+    }
 }

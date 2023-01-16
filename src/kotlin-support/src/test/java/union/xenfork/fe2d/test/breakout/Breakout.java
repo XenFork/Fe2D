@@ -54,9 +54,9 @@ import static union.xenfork.fe2d.gui.screen.ScreenUtil.*;
  * @since 0.1.0
  */
 public final class Breakout extends Game {
-    private static final int GAME_MENU = 0;
-    private static final int GAME_ACTIVE = 1;
-    private static final int GAME_WIN = 1;
+    public static final int GAME_MENU = 0;
+    public static final int GAME_ACTIVE = 1;
+    public static final int GAME_WIN = 2;
     public static final int LEVEL_WIDTH = 1600;
     public static final int LEVEL_HEIGHT = 900;
     private static final float PLAYER_SIZE_WIDTH = 150;
@@ -74,13 +74,11 @@ public final class Breakout extends Game {
     private Sprite player;
     private BallObject ball;
     private Unifont unifont;
-    private FontBatch fontBatch;
     private final Vector2f ballCollisionDiff = new Vector2f();
     private final List<Level> levels = new ArrayList<>();
     private int level = 1;
-    private int state = GAME_ACTIVE;
+    public int state = GAME_MENU;
     private final Matrix4f projectionMatrix = new Matrix4f().setOrtho2D(0, LEVEL_WIDTH, 0, LEVEL_HEIGHT);
-    private final Matrix4f guiProjMatrix = new Matrix4f();
     private final Matrix4fStack modelMatrix = new Matrix4fStack(2);
 
     public Level loadLevel(FileContext fileContext, int screenWidth, int screenHeight) {
@@ -94,22 +92,17 @@ public final class Breakout extends Game {
     }
 
     @Override
-    public void onResize(int width, int height) {
-        super.onResize(width, height);
-        guiProjMatrix.setOrtho2D(0, width, 0, height);
-        fontBatch.setProjectionMatrix(guiProjMatrix);
-    }
-
-    @Override
     public void onCursorPos(double posX, double posY) {
         super.onCursorPos(posX, posY);
-        if (Fe2D.input.isTouched()) {
-            float prevX = player.position.x;
-            player.position.x = clamp(0f,
-                LEVEL_WIDTH - PLAYER_SIZE_WIDTH,
-                player.position.x + (float) Fe2D.input.cursorDeltaX() * 2.4f);
-            if (ball.stuck) {
-                ball.position.x += (player.position.x - prevX);
+        if (state == GAME_ACTIVE) {
+            if (Fe2D.input.isTouched()) {
+                float prevX = player.position.x;
+                player.position.x = clamp(0f,
+                    LEVEL_WIDTH - PLAYER_SIZE_WIDTH,
+                    player.position.x + (float) Fe2D.input.cursorDeltaX() * 2.4f);
+                if (ball.stuck) {
+                    ball.position.x += (player.position.x - prevX);
+                }
             }
         }
     }
@@ -117,8 +110,25 @@ public final class Breakout extends Game {
     @Override
     public void onKeyPress(int key, int scancode, int mods) {
         super.onKeyPress(key, scancode, mods);
-        if (key == Input.KEY_SPACE) {
-            ball.stuck = false;
+        if (state == GAME_ACTIVE) {
+            if (key == Input.KEY_SPACE) {
+                ball.stuck = false;
+            }
+        } else {
+            if (key == Input.KEY_ENTER) {
+                switch (state) {
+                    case GAME_MENU -> {
+                        state = GAME_ACTIVE;
+                        openScreen(null);
+                    }
+                    case GAME_WIN -> {
+                        state = GAME_MENU;
+                        if (screen != null) {
+                            screen.onClose();
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -171,8 +181,8 @@ public final class Breakout extends Game {
         levels.add(four);
 
         unifont = Unifont.create();
-        fontBatch = new FontBatch();
-        guiProjMatrix.setOrtho2D(0, Fe2D.graphics.width(), 0, Fe2D.graphics.height());
+
+        openScreen(new MenuScreen());
     }
 
     public void doCollisions() {
@@ -221,13 +231,7 @@ public final class Breakout extends Game {
         }
     }
 
-    private void resetLevel() {
-        for (Brick brick : getCurrentLevel().bricks) {
-            brick.destroyed = false;
-        }
-    }
-
-    private void resetPlayer() {
+    public void resetPlayer() {
         player.position.set((LEVEL_WIDTH - PLAYER_SIZE_WIDTH) * .5f, 0f);
         ball.reset(player.position.x() + player.size.x() * .5f - BallObject.RADIUS, player.position.y() + player.size.y());
     }
@@ -235,15 +239,19 @@ public final class Breakout extends Game {
     @Override
     public void fixedUpdate() {
         super.fixedUpdate();
-        ball.move();
-        doCollisions();
+        if (state == GAME_ACTIVE) {
+            ball.move();
+            doCollisions();
+        }
     }
 
     @Override
     public void update() {
         super.update();
-        if ((ball.position.y() + ball.radius * 2f) < 0) {
-            resetPlayer();
+        if (state == GAME_ACTIVE) {
+            if ((ball.position.y() + ball.radius * 2f) < 0) {
+                resetPlayer();
+            }
         }
     }
 
@@ -252,12 +260,8 @@ public final class Breakout extends Game {
         super.lateUpdate();
         if (state == GAME_ACTIVE) {
             if (getCurrentLevel().isCompleted()) {
-                level++;
-                if (level > 4) {
-                    state = GAME_WIN;
-                } else {
-                    resetPlayer();
-                }
+                state = GAME_WIN;
+                openScreen(new GameOverScreen(new MenuScreen(), true));
             }
         }
     }
@@ -265,34 +269,33 @@ public final class Breakout extends Game {
     @Override
     public void render(double delta) {
         clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
-        if (state == GAME_ACTIVE) {
-            shaderProgram.use();
-            shaderProgram.setProjectionMatrix(projectionMatrix);
-            shaderProgram.setModelMatrix(modelMatrix);
-            shaderProgram.uploadUniforms();
+        shaderProgram.use();
+        shaderProgram.setProjectionMatrix(projectionMatrix);
+        shaderProgram.setModelMatrix(modelMatrix);
+        shaderProgram.uploadUniforms();
 
-            textureAtlas.bind();
-            backgroundMesh.render();
+        textureAtlas.bind();
+        backgroundMesh.render();
 
-            batch.begin();
-            getCurrentLevel().render(batch);
-            batch.draw(player);
-            batch.draw(ball);
-            batch.end();
+        batch.begin();
+        getCurrentLevel().render(batch);
+        batch.draw(player);
+        batch.draw(ball);
+        batch.end();
 
-            fontBatch.begin();
-            fontBatch.draw(unifont,
-                """
-                    Breakout Test
-                    Fork Engine 2D
-                    氙叉联盟 (XenFork Union) 🚀""",
-                0f,
-                0f);
-            fontBatch.end();
+        FontBatch renderer = Fe2D.textRenderer();
+        renderer.begin();
+        renderer.draw(unifont,
+            """
+                Breakout Test
+                Fork Engine 2D
+                氙叉联盟 (XenFork Union) 🚀""",
+            0f,
+            0f);
+        renderer.end();
 
-            ShaderProgram.ZERO.use();
-            Texture.ZERO.bind();
-        }
+        ShaderProgram.ZERO.use();
+        Texture.ZERO.bind();
 
         super.render(delta);
     }
@@ -304,7 +307,6 @@ public final class Breakout extends Game {
         dispose(backgroundMesh);
         dispose(batch);
         dispose(unifont);
-        dispose(fontBatch);
     }
 
     public static void main(String[] args) {

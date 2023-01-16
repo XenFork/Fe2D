@@ -36,6 +36,12 @@ public class Game extends Application {
     protected @Nullable Screen screen;
 
     @Override
+    public void launch(ApplicationConfig config) {
+        Fe2D.game = this;
+        super.launch(config);
+    }
+
+    @Override
     public void onResize(int width, int height) {
         super.onResize(width, height);
         if (screen != null) {

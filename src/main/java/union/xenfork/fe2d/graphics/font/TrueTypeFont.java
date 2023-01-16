@@ -18,39 +18,23 @@
 
 package union.xenfork.fe2d.graphics.font;
 
-import union.xenfork.fe2d.Disposable;
-import union.xenfork.fe2d.graphics.batch.FontBatch;
-
 /**
- * The font.
+ * The true-type font that loads with FreeType.
  *
  * @author squid233
  * @since 0.1.0
  */
-public interface Font extends Disposable {
-    /**
-     * The white square/blank quad character.
-     */
-    int WHITE_SQUARE = '□';
+public final class TrueTypeFont implements Font {
+//    private final int firstCodePoint;
+//    private final int lastCodePoint;
+    private final String codePoints;
 
-    String getFontCodePoints();
-
-    default int getCodePointCount() {
-        String codePoints = getFontCodePoints();
-        return codePoints.codePointCount(0, codePoints.length());
+    private TrueTypeFont(String codePoints) {
+        this.codePoints = codePoints;
     }
 
-    default boolean isGlyphEmpty(int codePoint) {
-        return getFontCodePoints().indexOf(codePoint) == -1;
+    @Override
+    public String getFontCodePoints() {
+        return codePoints;
     }
-
-    int getGlyphWidth(int codePoint);
-
-    int getGlyphHeight(int codePoint);
-
-    int getTextWidth(String text);
-
-    int getTextHeight(String text);
-
-    void draw(FontBatch batch, String text, float x, float y);
 }

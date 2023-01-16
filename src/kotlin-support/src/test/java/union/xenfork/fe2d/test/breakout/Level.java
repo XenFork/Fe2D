@@ -67,6 +67,12 @@ public final class Level {
         return true;
     }
 
+    public void reset() {
+        for (Brick brick : bricks) {
+            brick.destroyed = false;
+        }
+    }
+
     private void init(List<List<Integer>> tileData, int screenWidth, int screenHeight) {
         int width = tileData.get(0).size();
         int height = tileData.size();
