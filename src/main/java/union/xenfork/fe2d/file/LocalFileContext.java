@@ -18,44 +18,36 @@
 
 package union.xenfork.fe2d.file;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
+import org.lwjgl.system.MemoryUtil;
 
-import static org.lwjgl.system.MemoryUtil.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
- * The internal file context.
+ * The local file context.
  *
  * @author squid233
  * @since 0.1.0
  */
-public final class InternalFileContext extends FileContext {
+public final class LocalFileContext extends FileContext {
     /**
      * Creates the file context with the given path.
      *
      * @param path the path.
      */
-    public InternalFileContext(String path) {
+    public LocalFileContext(String path) {
         super(path);
-    }
-
-    private InputStream getInputStream() {
-        return Objects.requireNonNull(
-            ClassLoader.getSystemResourceAsStream(path()),
-            "Failed to get file '" + path() + "' from classpath"
-        );
     }
 
     @Override
     public String loadString() {
         try (var br = new BufferedReader(
-            new InputStreamReader(getInputStream(), StandardCharsets.UTF_8)
+            new FileReader(path(), StandardCharsets.UTF_8)
         )) {
             return loadString(br);
         } catch (IOException e) {
@@ -63,28 +55,20 @@ public final class InternalFileContext extends FileContext {
         }
     }
 
-    private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
-        return memRealloc(buffer, newCapacity);
-    }
-
     @Override
     public ByteBuffer loadBinary(long bufferSize) {
-        try (var is = getInputStream();
-             var rbc = Channels.newChannel(is)) {
-            ByteBuffer buffer = memAlloc((int) bufferSize);
-            while (true) {
-                int bytes = rbc.read(buffer);
-                if (bytes == -1) {
-                    break;
-                }
-                if (!buffer.hasRemaining()) {
-                    // +50%
-                    buffer = resizeBuffer(buffer, buffer.capacity() * 3 / 2);
-                }
+        Path path = Path.of(path());
+        if (Files.isReadable(path)) {
+            try (var fc = Files.newByteChannel(path)) {
+                ByteBuffer buffer = MemoryUtil.memAlloc((int) fc.size() + 1);
+                //noinspection StatementWithEmptyBody
+                while (fc.read(buffer) != -1) ;
+                return MemoryUtil.memSlice(buffer.flip());
+            } catch (IOException e) {
+                throw fail(e);
             }
-            return memSlice(buffer.flip());
-        } catch (IOException e) {
-            throw fail(e);
+        } else {
+            throw new IllegalStateException(path() + " is not readable!");
         }
     }
 
@@ -95,6 +79,6 @@ public final class InternalFileContext extends FileContext {
 
     @Override
     public String toString() {
-        return "{InternalFileContext: " + path() + '}';
+        return "{LocalFileContext: " + path() + '}';
     }
 }

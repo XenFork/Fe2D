@@ -81,10 +81,15 @@ public final class ShaderUniform implements Disposable {
                 if (arb) nglProgramUniform4fv(program.id(), location, 4, memAddress(buffer));
                 else nglUniform4fv(location, 4, memAddress(buffer));
             }
+            case MAT2 -> {
+                if (arb) nglProgramUniformMatrix2fv(program.id(), location, 1, false, memAddress(buffer));
+                else nglUniformMatrix2fv(location, 1, false, memAddress(buffer));
+            }
             case MAT4 -> {
                 if (arb) nglProgramUniformMatrix4fv(program.id(), location, 1, false, memAddress(buffer));
                 else nglUniformMatrix4fv(location, 1, false, memAddress(buffer));
             }
+            default -> throw new IllegalStateException("Unsupported type " + type + " detected! This is a bug!");
         }
         if (!arb) {
             GLStateManager.useProgram(currPrg);
@@ -107,6 +112,7 @@ public final class ShaderUniform implements Disposable {
     public enum Type {
         INT(1, DataType.INT),
         VEC4(4, DataType.FLOAT),
+        MAT2(4, DataType.FLOAT),
         MAT4(16, DataType.FLOAT),
         ;
 

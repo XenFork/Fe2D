@@ -56,6 +56,38 @@ public final class NativeImage implements PackerRegionSize, Disposable {
      * @param desiredChannels the desired channels. defaults to 4.
      * @param fail            the buffer will be used if failed to load image. must be allocated with {@link MemoryUtil}.
      *                        you can print a message to warn. defaults to {@code null}.
+     * @param bufferSize the initial buffer size. defaults to {@value FileContext#DEFAULT_BUFFER_SIZE}.
+     * @return the native image.
+     * @throws IllegalStateException if failed to load the image and <i>{@code fail}</i> is {@code null}.
+     * @see #load(FileContext, int)
+     * @see #load(FileContext, Supplier)
+     * @see #load(FileContext)
+     */
+    public static NativeImage load(FileContext context, int desiredChannels, @Nullable Supplier<@Nullable ByteBuffer> fail, long bufferSize)
+        throws IllegalStateException {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer width = stack.mallocInt(1);
+            IntBuffer height = stack.mallocInt(1);
+            IntBuffer channels = stack.mallocInt(1);
+            ByteBuffer binary = context.loadBinary(bufferSize);
+            ByteBuffer buffer = stbi_load_from_memory(binary, width, height, channels, desiredChannels);
+            if (context.shouldFreeBinary()) {
+                MemoryUtil.memFree(binary);
+            }
+            if (buffer == null && (fail == null || (buffer = fail.get()) == null)) {
+                throw new IllegalStateException("Failed to load image from context " + context + ". Reason: " + stbi_failure_reason());
+            }
+            return new NativeImage(width.get(0), height.get(0), buffer);
+        }
+    }
+
+    /**
+     * Loads an image from the given file context.
+     *
+     * @param context         the file context.
+     * @param desiredChannels the desired channels. defaults to 4.
+     * @param fail            the buffer will be used if failed to load image. must be allocated with {@link MemoryUtil}.
+     *                        you can print a message to warn. defaults to {@code null}.
      * @return the native image.
      * @throws IllegalStateException if failed to load the image and <i>{@code fail}</i> is {@code null}.
      * @see #load(FileContext, int)
@@ -64,16 +96,7 @@ public final class NativeImage implements PackerRegionSize, Disposable {
      */
     public static NativeImage load(FileContext context, int desiredChannels, @Nullable Supplier<@Nullable ByteBuffer> fail)
         throws IllegalStateException {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer width = stack.mallocInt(1);
-            IntBuffer height = stack.mallocInt(1);
-            IntBuffer channels = stack.mallocInt(1);
-            ByteBuffer buffer = stbi_load_from_memory(context.loadBinary(), width, height, channels, desiredChannels);
-            if (buffer == null && (fail == null || (buffer = fail.get()) == null)) {
-                throw new IllegalStateException("Failed to load image from context " + context + ". Reason: " + stbi_failure_reason());
-            }
-            return new NativeImage(width.get(0), height.get(0), buffer);
-        }
+        return load(context, desiredChannels, fail, FileContext.DEFAULT_BUFFER_SIZE);
     }
 
     /**

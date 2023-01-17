@@ -218,7 +218,7 @@ public class SpriteBatch implements Batch {
 
     private void checkDrawing() {
         if (!drawing)
-            throw new IllegalStateException("Can only call SpriteBatch.draw between begin and end (while drawing)");
+            throw new IllegalStateException("Can only call SpriteBatch.draw or flush between begin and end (while drawing)");
     }
 
     private void switchTexture(Texture newTexture) {

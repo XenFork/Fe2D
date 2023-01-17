@@ -6,11 +6,9 @@
 
 These features are purposed to target:
 
-- (0.1.0) TextRenderer
 - (0.1.0) GUIButton
 - (0.1.0) Configuration
 - (0.1.0) Cache, BinaryCache
-- (0.1.0) TrueTypeFont
 
 ### Drafts
 

@@ -44,6 +44,7 @@ repositories {
     mavenCentral()
     maven { url 'https://maven.aliyun.com/repository/central' }
     // temporary maven repositories
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'https://s01.oss.sonatype.org/content/repositories/releases' }
     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
 }
@@ -58,7 +59,7 @@ dependencies {
 
     testCompileOnly 'org.slf4j:slf4j-simple:2.0.6'
 
-    api platform("org.lwjgl:lwjgl-bom:3.3.1")
+    api platform("org.lwjgl:lwjgl-bom:3.3.2-SNAPSHOT")
     for (String depend in lwjglDepends) {
         api "org.lwjgl:lwjgl$depend"
         for (String platform in lwjglNatives) {

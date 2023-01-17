@@ -18,13 +18,13 @@
 
 package union.xenfork.fe2d.graphics.font;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryUtil;
 import union.xenfork.fe2d.file.FileContext;
-import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.texture.NativeImage;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntUnaryOperator;
@@ -41,11 +41,12 @@ import java.util.function.IntUnaryOperator;
  */
 public class BitmapFont implements Font {
     private final String codePoints;
-    private final ByteBuffer image;
+    private final NativeImage image;
     protected final Map<Integer, Integer> glyphU = new HashMap<>();
     protected final Map<Integer, Integer> glyphV = new HashMap<>();
     private final Map<Integer, Integer> glyphWidths = new HashMap<>();
     private final Map<Integer, Integer> glyphHeights = new HashMap<>();
+    private boolean disposed = false;
 
     /**
      * Creates a bitmap font with the given image and codepoints.
@@ -53,7 +54,7 @@ public class BitmapFont implements Font {
      * @param image      the image.
      * @param codePoints the codepoints that can be rendered with this texture.
      */
-    protected BitmapFont(ByteBuffer image, String codePoints) {
+    protected BitmapFont(NativeImage image, String codePoints) {
         this.image = image;
         this.codePoints = codePoints;
     }
@@ -66,7 +67,7 @@ public class BitmapFont implements Font {
                                   IntUnaryOperator heightProvider) {
         // image is managed by font
         NativeImage image = NativeImage.load(context, STBImage.STBI_grey);
-        BitmapFont font = new BitmapFont(image.buffer(), codePoints);
+        BitmapFont font = new BitmapFont(image, codePoints);
         int x = 0;
         int y = 0;
         int width = image.width();
@@ -111,7 +112,7 @@ public class BitmapFont implements Font {
      * @param codePoint the codepoint.
      * @return the image.
      */
-    protected ByteBuffer getImage(int codePoint) {
+    protected NativeImage getImage(int codePoint) {
         return image;
     }
 
@@ -135,10 +136,14 @@ public class BitmapFont implements Font {
         return text.lines().mapToInt(line -> {
             int width = 0;
             for (int i = 0, len = line.codePointCount(0, line.length()); i < len; i++) {
-                width += getGlyphWidth(line.codePointAt(i));
+                int codePoint = line.codePointAt(i);
+                width += getGlyphWidth(codePoint);
+                if (i < len - 1) {
+                    width += getKernAdvance(codePoint, line.codePointAt(i + 1));
+                }
             }
             return width;
-        }).max().orElse(0);
+        }).reduce(0, Integer::max);
     }
 
     @Override
@@ -147,13 +152,58 @@ public class BitmapFont implements Font {
             .mapToInt(line ->
                 line.codePoints()
                     .map(this::getGlyphHeight)
-                    .reduce(Integer::max)
-                    .orElse(0)
+                    .reduce(0, Integer::max)
             ).sum();
     }
 
+    /**
+     * Returns 1.
+     *
+     * @param pixels ignored.
+     * @return 1.
+     */
     @Override
-    public void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight, int colorABGR, int codePoint, float x, float y) {
+    public float getScale(float pixels) {
+        return 1;
+    }
+
+    @Override
+    public int getKernAdvance(int codePoint1, int codePoint2) {
+        return 0;
+    }
+
+    @Override
+    public void getGlyphHMetrics(int codePoint, @Nullable IntBuffer advanceWidth, @Nullable IntBuffer leftSideBearing) {
+        if (advanceWidth != null) {
+            advanceWidth.put(0, getGlyphWidth(codePoint));
+        }
+        if (leftSideBearing != null) {
+            leftSideBearing.put(0, 0);
+        }
+    }
+
+    @Override
+    public int getAscent() {
+        return getGlyphHeight('!');
+    }
+
+    @Override
+    public int getDescent() {
+        return 0;
+    }
+
+    @Override
+    public int getLineGap() {
+        return 0;
+    }
+
+    @Override
+    public int getAdvanceY() {
+        return getAscent() - getDescent() + getLineGap();
+    }
+
+    @Override
+    public void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight, int colorABGR, float scaleX, float scaleY, int leftSideBearing, int codePoint, int x, int y) {
         // if codepoint is not available, use white square
         if (isGlyphEmpty(codePoint)) {
             // if white square is not available, use space
@@ -163,34 +213,18 @@ public class BitmapFont implements Font {
                 codePoint = WHITE_SQUARE;
             }
         }
-        ByteBuffer image = getImage(codePoint);
+        NativeImage image = getImage(codePoint);
         int u = glyphU.get(codePoint);
         int v = glyphV.get(codePoint);
         int width = getGlyphWidth(codePoint);
         int height = getGlyphHeight(codePoint);
-        int ix = Math.round(x);
-        int iy = Math.round(y);
-        for (int j = iy, maxY = iy + height; j < maxY; j++) {
-            for (int i = ix, maxX = ix + width; i < maxX; i++) {
-                if (i >= 0 && i < bufWidth && j >= 0 && j < bufHeight) {
-                    int index = j * bufWidth + i;
-                    buffer.put(index, (Color.getRedFromABGR(colorABGR)))
-                        .put(index + 1, (Color.getBlueFromABGR(colorABGR)))
-                        .put(index + 2, (Color.getGreenFromABGR(colorABGR)))
-                        // sampling
-                        .put(index + 3,
-                            // j = iy + 0 -> v = v + 0, j = maxY = iy + height -> v = v + height
-                            (byte) (
-                                (image.get((v + j - iy) * width + (u + i - ix)) *
-                                 ((int) Color.getAlphaFromABGR(colorABGR))) / 255
-                            ));
-                }
-            }
-        }
+        FontUtil.drawBitmap(buffer, bufWidth, bufHeight, colorABGR, x, y, width, height, u, v, image.buffer(), image.width(), image.height());
     }
 
     @Override
     public void dispose() {
-        MemoryUtil.memFree(image);
+        if (disposed) return;
+        disposed = true;
+        image.dispose();
     }
 }

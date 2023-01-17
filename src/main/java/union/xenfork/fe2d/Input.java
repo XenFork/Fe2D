@@ -237,7 +237,8 @@ public final class Input {
     public static final int
         CURSOR_NORMAL = GLFW_CURSOR_NORMAL,
         CURSOR_HIDDEN = GLFW_CURSOR_HIDDEN,
-        CURSOR_DISABLED = GLFW_CURSOR_DISABLED;
+        CURSOR_DISABLED = GLFW_CURSOR_DISABLED,
+        CURSOR_CAPTURED = GLFW_CURSOR_CAPTURED;
 
     private final long window;
     private double cursorX, cursorY, cursorDeltaX, cursorDeltaY;

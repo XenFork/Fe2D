@@ -18,6 +18,7 @@
 
 package union.xenfork.fe2d.graphics;
 
+import org.joml.Matrix2fc;
 import org.joml.Matrix4fc;
 import org.joml.Vector4fc;
 import union.xenfork.fe2d.Disposable;
@@ -262,6 +263,20 @@ public final class ShaderProgram implements Disposable {
      */
     public void setUniform(String name, Vector4fc value) {
         setUniform(name, value.x(), value.y(), value.z(), value.w());
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Matrix2fc value) {
+        value.get(
+            getUniform(name, ShaderUniform.Type.MAT2).orElseThrow()
+                .markDirty()
+                .buffer
+        );
     }
 
     /**

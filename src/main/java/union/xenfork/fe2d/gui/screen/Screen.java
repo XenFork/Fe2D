@@ -77,7 +77,8 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
     }
 
     /**
-     * Initializes this screen.
+     * Initializes this screen. You can add GUI elements and widgets here.
+     * Don't forget to use {@link #addElement(GUIElement)} or {@link #addWidget(GUIWidget)}.
      */
     protected void init() {
     }

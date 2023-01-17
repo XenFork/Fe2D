@@ -35,6 +35,21 @@ public interface Font extends Disposable {
      * The white square/blank quad character.
      */
     int WHITE_SQUARE = '□';
+    /**
+     * The basic ascii characters.
+     */
+    String ASCII = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+    static String makeCodePoints(int from, int to) {
+        StringBuilder sb = new StringBuilder(to - from + 1);
+        for (int i = from; i <= to; i++) {
+            if (i < 0x10000 && Character.isSurrogate((char) i)) {
+                continue;
+            }
+            sb.appendCodePoint(i);
+        }
+        return sb.toString();
+    }
 
     String getFontCodePoints();
 
@@ -44,7 +59,7 @@ public interface Font extends Disposable {
     }
 
     default boolean isGlyphEmpty(int codePoint) {
-        return getFontCodePoints().indexOf(codePoint) == -1;
+        return getFontCodePoints().codePoints().anyMatch(value -> value == codePoint);
     }
 
     int getGlyphWidth(int codePoint);
@@ -55,9 +70,24 @@ public interface Font extends Disposable {
 
     int getTextHeight(String text);
 
+    float getScale(float pixels);
+
+    int getKernAdvance(int codePoint1, int codePoint2);
+
     void getGlyphHMetrics(int codePoint, @Nullable IntBuffer advanceWidth, @Nullable IntBuffer leftSideBearing);
 
-    void getGlyphVMetrics(int codePoint, @Nullable IntBuffer ascent, @Nullable IntBuffer descent, @Nullable IntBuffer lineGap);
+    int getAscent();
 
-    void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight, int colorABGR, int codePoint, float x, float y);
+    int getDescent();
+
+    int getLineGap();
+
+    int getAdvanceY();
+
+    void drawCodePoint(ByteBuffer buffer, int bufWidth, int bufHeight,
+                       int colorABGR,
+                       float scaleX, float scaleY,
+                       int leftSideBearing,
+                       int codePoint,
+                       int x, int y);
 }

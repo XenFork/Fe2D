@@ -64,6 +64,37 @@ public final class FileLoader {
     }
 
     /**
+     * Creates a local file context with the given path.
+     *
+     * @param path the path.
+     * @return the file context which loads files from classpath.
+     */
+    public FileContext local(String path) {
+        return new LocalFileContext(path);
+    }
+
+    /**
+     * Creates a local file context with the given resource path.
+     *
+     * @param path the path.
+     * @return the file context which loads files from classpath.
+     */
+    public FileContext local(ResourcePath path) {
+        return new LocalFileContext(path.toLocation());
+    }
+
+    /**
+     * Creates a local file context with the given resource path.
+     *
+     * @param path   the path.
+     * @param prefix the prefix of the path.
+     * @return the file context which loads files from classpath.
+     */
+    public FileContext local(ResourcePath path, String prefix) {
+        return new LocalFileContext(path.toLocation(prefix));
+    }
+
+    /**
      * Gets the instance.
      *
      * @return the instance.

@@ -21,6 +21,7 @@ package union.xenfork.fe2d.test.breakout;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector2f;
+import org.lwjgl.system.MemoryUtil;
 import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Game;
@@ -29,8 +30,9 @@ import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
 import union.xenfork.fe2d.graphics.batch.SpriteBatch;
+import union.xenfork.fe2d.graphics.font.Font;
 import union.xenfork.fe2d.graphics.font.TextRenderer;
-import union.xenfork.fe2d.graphics.font.Unifont;
+import union.xenfork.fe2d.graphics.font.TrueTypeFont;
 import union.xenfork.fe2d.graphics.mesh.GeometryMesh;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
 import union.xenfork.fe2d.graphics.sprite.Sprite;
@@ -67,13 +69,14 @@ public final class Breakout extends Game {
     public static final ResourcePath BLOCK_SOLID = new ResourcePath("breakout:texture/block_solid.png");
     public static final ResourcePath FACE = new ResourcePath("breakout:texture/face.png");
     public static final ResourcePath PADDLE = new ResourcePath("breakout:texture/paddle.png");
+    private static final String XENFORK_STR = "氙叉联盟 (XenFork Union)";
     private ShaderProgram shaderProgram;
     private Mesh backgroundMesh;
     private TextureAtlas textureAtlas;
     private SpriteBatch batch;
     private Sprite player;
     private BallObject ball;
-    private Unifont unifont;
+    private TrueTypeFont trueTypeFont;
     private final Vector2f ballCollisionDiff = new Vector2f();
     private final List<Level> levels = new ArrayList<>();
     private int level = 1;
@@ -180,7 +183,9 @@ public final class Breakout extends Game {
         levels.add(three);
         levels.add(four);
 
-        unifont = Unifont.create();
+        // note: we just simply get the Chinese characters from the constant.
+        // the emoji might be white square.
+        trueTypeFont = TrueTypeFont.load(Font.ASCII + XENFORK_STR.substring(0, 4) + "🚀", Fe2D.files.local("test.ttf"));
 
         openScreen(new MenuScreen());
     }
@@ -285,13 +290,21 @@ public final class Breakout extends Game {
 
         TextRenderer renderer = Fe2D.textRenderer();
         renderer.begin();
-        renderer.draw(unifont,
-            """
+        // renders basic ASCII alphabet, Chinese characters, and emoji.
+        renderer.draw(Fe2D.defaultFont(),
+            String.format("""
                 Breakout Test
                 Fork Engine 2D
-                氙叉联盟 (XenFork Union) 🚀""",
-            0f,
-            0f);
+                %1$s 🚀
+                THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG,
+                the quick brown fox jumps over the lazy dog.""", XENFORK_STR),
+            0f, 0f);
+        renderer.draw(trueTypeFont,
+            String.format("""
+                %1$s 🚀
+                THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG,
+                the quick brown fox jumps over the lazy dog.""", XENFORK_STR),
+            0f, 100f);
         renderer.end();
 
         ShaderProgram.ZERO.use();
@@ -306,7 +319,8 @@ public final class Breakout extends Game {
         dispose(shaderProgram);
         dispose(backgroundMesh);
         dispose(batch);
-        dispose(unifont);
+        dispose(trueTypeFont);
+        MemoryUtil.memFree(trueTypeFont.fontData());
     }
 
     public static void main(String[] args) {

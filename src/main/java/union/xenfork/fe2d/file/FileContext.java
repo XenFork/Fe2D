@@ -18,6 +18,11 @@
 
 package union.xenfork.fe2d.file;
 
+import org.lwjgl.system.MemoryUtil;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 /**
@@ -26,7 +31,7 @@ import java.nio.ByteBuffer;
  * @author squid233
  * @since 0.1.0
  */
-public sealed abstract class FileContext permits InternalFileContext {
+public sealed abstract class FileContext permits InternalFileContext, LocalFileContext {
     /**
      * The default buffer size.
      */
@@ -40,6 +45,22 @@ public sealed abstract class FileContext permits InternalFileContext {
      */
     public FileContext(String path) {
         this.path = path;
+    }
+
+    IllegalStateException fail(IOException e) {
+        return new IllegalStateException("Failed to load file '" + path() + '\'', e);
+    }
+
+    String loadString(BufferedReader br) throws IOException {
+        StringBuilder sb = new StringBuilder(512);
+        String line = br.readLine();
+        if (line != null) {
+            sb.append(line);
+        }
+        while ((line = br.readLine()) != null) {
+            sb.append('\n').append(line);
+        }
+        return sb.toString();
     }
 
     /**
@@ -67,6 +88,15 @@ public sealed abstract class FileContext permits InternalFileContext {
     public ByteBuffer loadBinary() {
         return loadBinary(DEFAULT_BUFFER_SIZE);
     }
+
+    /**
+     * Returns {@code true} if user should explicitly {@link MemoryUtil#memFree(Buffer) release} the buffer
+     * that loaded from {@link #loadBinary(long) loadBinary}.
+     *
+     * @return {@code true} if user should explicitly {@link MemoryUtil#memFree(Buffer) release} the buffer
+     * that loaded from {@link #loadBinary(long) loadBinary}.
+     */
+    public abstract boolean shouldFreeBinary();
 
     /**
      * Gets the path.
