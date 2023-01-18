@@ -166,6 +166,7 @@ public final class Breakout extends Game {
 
         batch = new SpriteBatch();
         batch.setProjectionMatrix(projectionMatrix);
+        Fe2D.setSpriteRenderer(batch);
 
         player = new Sprite(textureAtlas, textureAtlas.get(PADDLE));
         player.size.set(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);

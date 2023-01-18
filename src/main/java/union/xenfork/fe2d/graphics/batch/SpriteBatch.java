@@ -55,6 +55,7 @@ public class SpriteBatch implements Batch {
     private final Matrix4f projectionMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
     private final Matrix4f combinedMatrix = new Matrix4f();
+    private final Matrix4f spriteMatrix = new Matrix4f();
     final ShaderProgram shader;
     private ShaderProgram customShader;
     private final boolean ownsShader;
@@ -67,7 +68,7 @@ public class SpriteBatch implements Batch {
     private int colorBits = Color.WHITE_BITS;
     private int vertexBufferPos = 0;
     private int drawnSpriteCount = 0;
-    private Texture texture;
+    private Texture lastTexture;
     private float invTexWidth, invTexHeight;
     private boolean disposed = false;
 
@@ -165,18 +166,20 @@ public class SpriteBatch implements Batch {
         if (drawing) throw new IllegalStateException("Cannot call SpriteBatch.begin while drawing");
         drawing = true;
         vertexBufferPos = 0;
-        texture = null;
     }
 
     @Override
     public void end() {
         if (!drawing) throw new IllegalStateException("Can only call SpriteBatch.end while drawing");
-        flush();
+        if (vertexBufferPos > 0) flush();
+        lastTexture = null;
         drawing = false;
     }
 
     @Override
     public void flush() {
+        // if no texture was set, skip
+        if (lastTexture == null) return;
         checkDrawing();
         mesh.updateVertices(vertexBufferPos);
         int currPrg = currentProgram();
@@ -200,7 +203,7 @@ public class SpriteBatch implements Batch {
             shader.use();
         }
         setupMatrices();
-        texture.bind();
+        lastTexture.bind();
         mesh.render(GL_TRIANGLES, drawnSpriteCount * 6);
         bindTexture2D(currTex);
         drawnSpriteCount = 0;
@@ -221,21 +224,21 @@ public class SpriteBatch implements Batch {
             throw new IllegalStateException("Can only call SpriteBatch.draw or flush between begin and end (while drawing)");
     }
 
-    private void switchTexture(Texture newTexture) {
-        if (texture != null) {
-            if (newTexture == texture) return;
-            flush();
-        }
-        texture = newTexture;
-        invTexWidth = 1f / newTexture.width();
-        invTexHeight = 1f / newTexture.height();
+    private void switchTexture(Texture texture) {
+        flush();
+        lastTexture = texture;
+        invTexWidth = 1f / texture.width();
+        invTexHeight = 1f / texture.height();
     }
 
     @Override
     public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform) {
         checkDrawing();
         switchTexture(texture);
-        if (vertexBufferPos == maxVertexBytesSize) flush();
+        if (texture != lastTexture)
+            switchTexture(texture);
+        if (vertexBufferPos == maxVertexBytesSize)
+            flush();
 
         float x0, y0, x1, y1;
         if ((transform.properties() & Matrix4fc.PROPERTY_IDENTITY) != 0) {
@@ -302,6 +305,23 @@ public class SpriteBatch implements Batch {
     @Override
     public void draw(Texture texture, float x, float y, TextureRegion region) {
         draw(texture, x, y, region.u1() - region.u0(), region.v1() - region.v0(), region);
+    }
+
+    /**
+     * Draws a sprite with the given transformation.
+     *
+     * @param sprite    the sprite to be drawn.
+     * @param transform the matrix transformation.
+     */
+    public void draw(Sprite sprite, Matrix4fc transform) {
+        int currColor = spriteColor();
+        setSpriteColor(sprite.color);
+        draw(sprite.texture,
+            0f, 0f,
+            sprite.size.x(), sprite.size.y(),
+            sprite.textureRegion,
+            transform.mul(sprite.getTransform(), spriteMatrix));
+        setSpriteColor(currColor);
     }
 
     /**

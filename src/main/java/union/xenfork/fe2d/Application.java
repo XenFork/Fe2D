@@ -30,6 +30,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import union.xenfork.fe2d.graphics.batch.SpriteBatch;
 
 import java.nio.IntBuffer;
 import java.util.Map;
@@ -116,11 +117,18 @@ public class Application implements Updatable, Disposable {
                     glfwSetFramebufferSizeCallback(window, (handle, width, height) -> {
                         Fe2D.graphics.setSize(width, height);
                         if (Fe2D.hasTextRenderer()) {
-                            Fe2D.textRenderer().setProjectionMatrix(
-                                Fe2D.textRenderer()
+                            Fe2D.textRenderer().resize(width, height);
+                        }
+                        if (Fe2D.hasSpriteBatch()) {
+                            SpriteBatch oldBatch = Fe2D.spriteRenderer();
+                            // reset to null to get sprite batch
+                            Fe2D.setSpriteRenderer(null);
+                            Fe2D.spriteRenderer()
+                                .setProjectionMatrix(Fe2D.spriteRenderer()
                                     .projectionMatrix()
-                                    .setOrtho2D(0, width, 0, height)
-                            );
+                                    .setOrtho2D(0, width, 0, height));
+                            // restore
+                            Fe2D.setSpriteRenderer(oldBatch);
                         }
                         onResize(width, height);
                     });

@@ -7,12 +7,9 @@ plugins {
 
 import org.gradle.internal.os.OperatingSystem
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
-
 rootProject.ext.lwjglDepends = ['', '-glfw', '-opengl', '-stb', '-jemalloc']
 
 group projGroupId
-archivesBaseName = projArtifactId
 version = projVersion
 
 if (Boolean.parseBoolean(System.getProperty("project.bindAllNative"))) {
@@ -25,17 +22,19 @@ if (Boolean.parseBoolean(System.getProperty("project.bindAllNative"))) {
     def osArch = System.getProperty("os.arch")
     switch (OperatingSystem.current()) {
         case OperatingSystem.LINUX:
-            project.ext.lwjglNatives = [osArch.startsWith("arm") || osArch.startsWith("aarch64")
-                ? "linux-${osArch.contains("64") || osArch.startsWith("armv8") ? "arm64" : "arm32"}"
-                : "linux"]
+            project.ext.lwjglNatives = [
+                osArch.startsWith("arm") || osArch.startsWith("aarch64")
+                    ? "linux-${osArch.contains("64") || osArch.startsWith("armv8") ? "arm64" : "arm32"}"
+                    : "linux"]
             break
         case OperatingSystem.MAC_OS:
             project.ext.lwjglNatives = [osArch.startsWith("aarch64") ? "macos-arm64" : "macos"]
             break
         case OperatingSystem.WINDOWS:
-            project.ext.lwjglNatives = [osArch.contains("64")
-                ? "windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
-                : "windows-x86"]
+            project.ext.lwjglNatives = [
+                osArch.contains("64")
+                    ? "windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
+                    : "windows-x86"]
             break
     }
 }
@@ -68,8 +67,32 @@ dependencies {
     }
 }
 
+def targetJavaVersion = 17
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+    }
+    archivesBaseName = projArtifactId
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    failOnError = false
+    options.encoding 'UTF-8'
+    options.charSet 'UTF-8'
+    options.author true
+    options.locale 'en_US'
+    options.links "https://docs.oracle.com/en/java/javase/$sourceCompatibility/docs/api/"
+    options.windowTitle "$projName $projVersion Javadoc"
 }
 
 jar {
@@ -86,13 +109,13 @@ jar {
     )
 }
 
-tasks.register('sourcesJar', Jar) {
+sourcesJar {
     dependsOn classes
     archiveClassifier.set 'sources'
     from sourceSets.main.allSource, 'LICENSE'
 }
 
-tasks.register('javadocJar', Jar) {
+javadocJar {
     dependsOn javadoc
     archiveClassifier.set 'javadoc'
     from javadoc, 'LICENSE'
@@ -100,21 +123,6 @@ tasks.register('javadocJar', Jar) {
 
 artifacts {
     archives javadocJar, sourcesJar
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
-javadoc {
-    failOnError = false
-    options.encoding 'UTF-8'
-    options.charSet 'UTF-8'
-    options.author true
-    options.locale 'en_US'
-    options.links "https://docs.oracle.com/en/java/javase/$sourceCompatibility/docs/api/"
-    options.windowTitle "$projName $projVersion Javadoc"
 }
 
 publishing.publications {

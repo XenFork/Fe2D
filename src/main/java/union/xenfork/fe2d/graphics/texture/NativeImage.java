@@ -50,13 +50,29 @@ public final class NativeImage implements PackerRegionSize, Disposable {
     }
 
     /**
+     * Creates the image wrapper with the given buffer.
+     * <p>
+     * The buffer must be allocated with {@link MemoryUtil#memAlloc(int) memAlloc} or {@link MemoryUtil#memCalloc(int) memCalloc}.
+     * <p>
+     * The buffer will be released on {@link #dispose() disposing}.
+     *
+     * @param width  the width of the image.
+     * @param height the height of the image.
+     * @param buffer the buffer.
+     * @return the native image.
+     */
+    public static NativeImage ofRawBuffer(int width, int height, ByteBuffer buffer) {
+        return new NativeImage(width, height, buffer);
+    }
+
+    /**
      * Loads an image from the given file context.
      *
      * @param context         the file context.
      * @param desiredChannels the desired channels. defaults to 4.
      * @param fail            the buffer will be used if failed to load image. must be allocated with {@link MemoryUtil}.
      *                        you can print a message to warn. defaults to {@code null}.
-     * @param bufferSize the initial buffer size. defaults to {@value FileContext#DEFAULT_BUFFER_SIZE}.
+     * @param bufferSize      the initial buffer size. defaults to {@value FileContext#DEFAULT_BUFFER_SIZE}.
      * @return the native image.
      * @throws IllegalStateException if failed to load the image and <i>{@code fail}</i> is {@code null}.
      * @see #load(FileContext, int)

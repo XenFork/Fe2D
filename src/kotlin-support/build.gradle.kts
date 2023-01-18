@@ -80,47 +80,19 @@ dependencies {
     }
 }
 
+val targetJavaVersion = 17
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-}
-
-tasks.named<Jar>("jar") {
-    manifestContentCharset = "utf-8"
-    setMetadataCharset("utf-8")
-    from("LICENSE")
-    manifest.attributes(
-        "Specification-Title" to archiveBaseName,
-        "Specification-Vendor" to orgName,
-        "Specification-Version" to "0",
-        "Implementation-Title" to archiveBaseName,
-        "Implementation-Vendor" to orgName,
-        "Implementation-Version" to archiveVersion
-    )
-}
-
-tasks.register<Jar>("sourcesJar") {
-    dependsOn(tasks.named("classes"))
-    archiveClassifier.set("sources")
-    from(sourceSets["main"].allSource, "LICENSE")
-}
-
-tasks.register<Jar>("javadocJar") {
-    val javadoc by tasks
-    dependsOn(javadoc)
-    archiveClassifier.set("javadoc")
-    from(javadoc, "LICENSE")
-}
-
-tasks.withType<Jar> {
-    archiveBaseName.set(ktArtifactId)
-}
-
-artifacts {
-    archives(tasks.named("javadocJar"))
-    archives(tasks.named("sourcesJar"))
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
+        options.release.set(targetJavaVersion)
+    }
 }
 
 java {
+    val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+    }
     withJavadocJar()
     withSourcesJar()
 }
@@ -141,6 +113,42 @@ tasks.named<Javadoc>("javadoc") {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.named<Jar>("jar") {
+    manifestContentCharset = "utf-8"
+    setMetadataCharset("utf-8")
+    from("LICENSE")
+    manifest.attributes(
+        "Specification-Title" to archiveBaseName,
+        "Specification-Vendor" to orgName,
+        "Specification-Version" to "0",
+        "Implementation-Title" to archiveBaseName,
+        "Implementation-Vendor" to orgName,
+        "Implementation-Version" to archiveVersion
+    )
+}
+
+tasks.named<Jar>("sourcesJar") {
+    dependsOn(tasks.named("classes"))
+    archiveClassifier.set("sources")
+    from(sourceSets["main"].allSource, "LICENSE")
+}
+
+tasks.named<Jar>("javadocJar") {
+    val javadoc by tasks
+    dependsOn(javadoc)
+    archiveClassifier.set("javadoc")
+    from(javadoc, "LICENSE")
+}
+
+tasks.withType<Jar> {
+    archiveBaseName.set(ktArtifactId)
+}
+
+artifacts {
+    archives(tasks.named("javadocJar"))
+    archives(tasks.named("sourcesJar"))
 }
 
 publishing {

@@ -18,7 +18,6 @@
 
 package union.xenfork.fe2d.graphics.font;
 
-import org.joml.Matrix2f;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryStack;
@@ -54,7 +53,6 @@ public final class TextRenderer implements Disposable {
     private final Matrix4f projectionMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
     private final Matrix4f combinedMatrix = new Matrix4f();
-    private final Matrix2f textureMatrix = new Matrix2f();
     private final Mesh mesh;
     private ByteBuffer buffer;
     private int width, height;
@@ -75,10 +73,9 @@ public final class TextRenderer implements Disposable {
             in vec2 %2$s;
             out vec2 UV0;
             uniform mat4 %3$s;
-            uniform mat2 TextureMatrix;
             void main() {
                 gl_Position = %3$s * vec4(%1$s, 0.0, 1.0);
-                UV0 = TextureMatrix * %2$s;
+                UV0 = %2$s;
             }
             """, VertexAttribute.POSITION_ATTRIB, VertexAttribute.TEX_COORD_ATTRIB + '0', ShaderProgram.U_PROJECTION_VIEW_MODEL_MATRIX
         ), String.format("""
@@ -97,8 +94,9 @@ public final class TextRenderer implements Disposable {
                     1f, 0f, 1f, 0f,
                     1f, 1f, 1f, 1f),
             4,
-            new int[]{0, 1, 2, 2, 3, 0},
+            new int[]{0, 1, 2, 3},
             LAYOUT);
+        mesh.setDefaultDrawMode(GL_TRIANGLE_FAN);
         texture = glGenTextures();
         bindTexture2D(texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -121,18 +119,16 @@ public final class TextRenderer implements Disposable {
         this.width = width;
         this.height = height;
         if (grown) {
-            texWidth = width;
-            texHeight = height;
-            buffer = memRealloc(buffer, width * height * 4);
+            texWidth = Math.max(width, texWidth);
+            texHeight = Math.max(height, texHeight);
+            buffer = memRealloc(buffer, texWidth * texHeight * 4);
             int currTex = textureBinding2D();
             bindTexture2D(texture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
             bindTexture2D(currTex);
         }
         projectionMatrix.setOrtho2D(0, width, 0, height);
-        modelMatrix.scaling(width, height, 1f);
-        textureMatrix.scaling((float) width / Math.max(1, texWidth),
-            (float) height / Math.max(1, texHeight));
+        modelMatrix.scaling(texWidth, texHeight, 1f);
     }
 
     public void begin() {
@@ -148,6 +144,7 @@ public final class TextRenderer implements Disposable {
     }
 
     public void flush() {
+        checkDrawing();
         int currPrg = currentProgram();
         int currTex = textureBinding2D();
         boolean blend = isBlendEnabled();
@@ -166,7 +163,7 @@ public final class TextRenderer implements Disposable {
         shader.use();
         setupMatrices();
         bindTexture2D(texture);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
         mesh.render();
         bindTexture2D(currTex);
         useProgram(currPrg);
@@ -180,14 +177,19 @@ public final class TextRenderer implements Disposable {
         }
     }
 
+    private void checkDrawing() {
+        if (!drawing)
+            throw new IllegalStateException("Can only call TextRenderer.draw or flush between begin and end (while drawing)");
+    }
+
     private void setupMatrices() {
         projectionMatrix.mul(modelMatrix, combinedMatrix);
         shader.setProjectionViewModelMatrix(combinedMatrix);
-        shader.setUniform("TextureMatrix", textureMatrix);
         shader.uploadUniforms();
     }
 
     public void drawCodePoint(Font font, int codePoint, float x, float y, float scaleX, float scaleY, int leftSideBearing) {
+        checkDrawing();
         font.drawCodePoint(buffer,
             texWidth, texHeight,
             colorBits,
@@ -198,6 +200,7 @@ public final class TextRenderer implements Disposable {
     }
 
     public void drawRaw(Font font, String text, float x, float y, float pixelHeight) {
+        checkDrawing();
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer pAdvance = stack.callocInt(1);
             IntBuffer pBearing = stack.callocInt(1);
@@ -215,6 +218,7 @@ public final class TextRenderer implements Disposable {
     }
 
     public void draw(Font font, String text, float x, float y, float pixelHeight) {
+        checkDrawing();
         float scale = font.getScale(pixelHeight);
         float yAdvance = scale * font.getAdvanceY();
         String[] lines = text.lines().toArray(String[]::new);
@@ -225,6 +229,7 @@ public final class TextRenderer implements Disposable {
     }
 
     public void draw(Font font, String text, float x, float y) {
+        checkDrawing();
         draw(font, text, x, y, 20f);
     }
 

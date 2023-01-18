@@ -20,6 +20,7 @@ package union.xenfork.fe2d.test.breakout;
 
 import union.xenfork.fe2d.gui.screen.Screen;
 import union.xenfork.fe2d.gui.widget.GUILabel;
+import union.xenfork.fe2d.gui.widget.button.RectButton;
 
 /**
  * the menu screen.
@@ -41,6 +42,7 @@ public final class MenuScreen extends Screen {
     protected void init() {
         super.init();
         label = addWidget(new GUILabel("Press ENTER to start"));
+        addWidget(new RectButton(0, 0, 100, 100, System.out::println));
     }
 
     @Override

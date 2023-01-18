@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.Updatable;
+import union.xenfork.fe2d.graphics.batch.SpriteBatch;
+import union.xenfork.fe2d.graphics.font.TextRenderer;
 import union.xenfork.fe2d.gui.Drawable;
 import union.xenfork.fe2d.gui.GUIElement;
 import union.xenfork.fe2d.gui.GUIParentElement;
@@ -123,13 +125,27 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
 
     @Override
     public void render(double delta, double cursorX, double cursorY) {
-        Fe2D.textRenderer().begin();
+        TextRenderer textRenderer = Fe2D.textRenderer();
+        SpriteBatch spriteBatch = Fe2D.spriteRenderer();
+        boolean textNotDrawing = !textRenderer.isDrawing();
+        boolean spriteNotDrawing = !spriteBatch.isDrawing();
+        if (spriteNotDrawing) {
+            spriteBatch.begin();
+        }
+        if (textNotDrawing) {
+            textRenderer.begin();
+        }
         for (GUIElement element : children()) {
             if (element instanceof Drawable drawable) {
                 drawable.render(delta, cursorX, cursorY);
             }
         }
-        Fe2D.textRenderer().end();
+        if (spriteNotDrawing) {
+            spriteBatch.end();
+        }
+        if (textNotDrawing) {
+            textRenderer.end();
+        }
     }
 
     /**

@@ -40,6 +40,13 @@ public interface Font extends Disposable {
      */
     String ASCII = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 
+    /**
+     * Creates the codepoints string with the given range without surrogate characters.
+     *
+     * @param from the first codepoint (inclusive).
+     * @param to   the last codepoint (inclusive).
+     * @return the codepoints string.
+     */
     static String makeCodePoints(int from, int to) {
         StringBuilder sb = new StringBuilder(to - from + 1);
         for (int i = from; i <= to; i++) {
@@ -51,15 +58,31 @@ public interface Font extends Disposable {
         return sb.toString();
     }
 
+    /**
+     * Gets the codepoints string.
+     *
+     * @return the codepoints string.
+     */
     String getFontCodePoints();
 
+    /**
+     * Gets the length of codepoints string.
+     *
+     * @return the length of codepoints string.
+     */
     default int getCodePointCount() {
         String codePoints = getFontCodePoints();
         return codePoints.codePointCount(0, codePoints.length());
     }
 
+    /**
+     * Returns {@code true} if the glyph of the given codepoint is {@link #WHITE_SQUARE empty}.
+     *
+     * @param codePoint the codepoint.
+     * @return {@code true} if the glyph of the given codepoint is {@link #WHITE_SQUARE empty}.
+     */
     default boolean isGlyphEmpty(int codePoint) {
-        return getFontCodePoints().codePoints().anyMatch(value -> value == codePoint);
+        return getFontCodePoints().codePoints().allMatch(value -> value != codePoint);
     }
 
     int getGlyphWidth(int codePoint);
@@ -70,6 +93,13 @@ public interface Font extends Disposable {
 
     int getTextHeight(String text);
 
+    /**
+     * Computes a scale factor to produce a font whose "height" is pixels tall.
+     * Height is measured as the distance from the highest ascender to the lowest descender.
+     *
+     * @param pixels the font height, in pixels.
+     * @return the scale factor.
+     */
     float getScale(float pixels);
 
     int getKernAdvance(int codePoint1, int codePoint2);

@@ -23,9 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import union.xenfork.fe2d.file.FileLoader;
 import union.xenfork.fe2d.graphics.Graphics;
+import union.xenfork.fe2d.graphics.batch.SpriteBatch;
 import union.xenfork.fe2d.graphics.font.Font;
 import union.xenfork.fe2d.graphics.font.TextRenderer;
 import union.xenfork.fe2d.graphics.font.Unifont;
+import union.xenfork.fe2d.graphics.texture.Texture;
 
 /**
  * The global objects of Fork Engine 2D.
@@ -67,7 +69,10 @@ public final class Fe2D {
      */
     public static Timer timer;
     private static TextRenderer textRenderer;
+    private static Font defaultFont;
     private static Unifont unifont;
+    private static SpriteBatch spriteBatch;
+    private static SpriteBatch spriteRenderer;
 
     /**
      * Returns {@code true} if the text renderer is created.
@@ -79,7 +84,16 @@ public final class Fe2D {
     }
 
     /**
-     * Gets the text renderer, or creates a new if it is not created.
+     * Returns {@code true} if the sprite batch is created.
+     *
+     * @return {@code true} if the sprite batch is created.
+     */
+    public static boolean hasSpriteBatch() {
+        return spriteBatch != null;
+    }
+
+    /**
+     * Gets the text renderer, or creates a new one if it is not created.
      *
      * @return the text renderer.
      */
@@ -91,13 +105,51 @@ public final class Fe2D {
     }
 
     /**
+     * Sets the current sprite batch.
+     *
+     * @param batch the sprite batch.
+     */
+    public static void setSpriteRenderer(@Nullable SpriteBatch batch) {
+        spriteRenderer = batch;
+    }
+
+    /**
+     * Gets the current sprite batch, or gets the default one if it is no sprite batch was set.
+     *
+     * @return the sprite batch.
+     */
+    public static SpriteBatch spriteRenderer() {
+        if (spriteRenderer != null) {
+            return spriteRenderer;
+        }
+        if (spriteBatch == null) {
+            spriteBatch = new SpriteBatch();
+            spriteRenderer = spriteBatch;
+        }
+        return spriteBatch;
+    }
+
+    /**
+     * Sets the default font.
+     *
+     * @param defaultFont the default font.
+     */
+    public static void setDefaultFont(Font defaultFont) {
+        Fe2D.defaultFont = defaultFont;
+    }
+
+    /**
      * Gets the default font, or creates Unifont if it is not created.
      *
      * @return the default font.
      */
     public static Font defaultFont() {
+        if (defaultFont != null) {
+            return defaultFont;
+        }
         if (unifont == null) {
             unifont = Unifont.create();
+            defaultFont = unifont;
         }
         return unifont;
     }
@@ -112,6 +164,12 @@ public final class Fe2D {
         }
         if (unifont != null) {
             unifont.dispose();
+        }
+        if (spriteBatch != null) {
+            spriteBatch.dispose();
+        }
+        if (Texture.hasWhiteDot()) {
+            Texture.whiteDot().dispose();
         }
     }
 }

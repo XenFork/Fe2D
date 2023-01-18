@@ -18,6 +18,8 @@
 
 package union.xenfork.fe2d.gui.widget.button;
 
+import union.xenfork.fe2d.Fe2D;
+import union.xenfork.fe2d.Updatable;
 import union.xenfork.fe2d.gui.widget.GUIWidget;
 
 /**
@@ -28,26 +30,61 @@ import union.xenfork.fe2d.gui.widget.GUIWidget;
  * @author squid233
  * @since 0.1.0
  */
-public abstract class GUIButton extends GUIWidget {
-    private static final PressAction DEFAULT_ACTION = button -> {
+public abstract class GUIButton extends GUIWidget implements Updatable {
+    private static final PressAction DEFAULT_PRESS_ACTION = button -> {
+    };
+    private static final HoverAction DEFAULT_HOVER_ACTION = (button, cursorX, cursorY) -> {
     };
     protected int width;
     protected int height;
     /**
-     * The action to be performed.
+     * The action to be performed on pressing this button.
      */
     protected PressAction pressAction;
+    protected HoverAction hoverAction;
 
-    public GUIButton(float x, float y, int width, int height, PressAction pressAction) {
+    /**
+     * Creates the GUI button with the given position, size and actions.
+     *
+     * @param x           the initial position x.
+     * @param y           the initial position y.
+     * @param width       the initial width.
+     * @param height      the initial height.
+     * @param pressAction the action to be performed on pressing this button.
+     * @param hoverAction the action to be performed on hovering this button.
+     */
+    public GUIButton(float x, float y, int width, int height, PressAction pressAction, HoverAction hoverAction) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.pressAction = pressAction;
+        this.hoverAction = hoverAction;
     }
 
+    /**
+     * Creates the GUI button with the given position, size and action.
+     *
+     * @param x           the initial position x.
+     * @param y           the initial position y.
+     * @param width       the initial width.
+     * @param height      the initial height.
+     * @param pressAction the action to be performed on pressing this button.
+     */
+    public GUIButton(float x, float y, int width, int height, PressAction pressAction) {
+        this(x, y, width, height, pressAction, DEFAULT_HOVER_ACTION);
+    }
+
+    /**
+     * Creates the GUI button with the given position and size.
+     *
+     * @param x      the initial position x.
+     * @param y      the initial position y.
+     * @param width  the initial width.
+     * @param height the initial height.
+     */
     public GUIButton(float x, float y, int width, int height) {
-        this(x, y, width, height, DEFAULT_ACTION);
+        this(x, y, width, height, DEFAULT_PRESS_ACTION);
     }
 
     /**
@@ -64,6 +101,35 @@ public abstract class GUIButton extends GUIWidget {
          * @param button the button that was pressed.
          */
         void onPress(GUIButton button);
+    }
+
+    @FunctionalInterface
+    public interface HoverAction {
+        void onHover(GUIButton button, double cursorX, double cursorY);
+    }
+
+    @Override
+    public boolean perform() {
+        if (isCursorHover(Fe2D.input.cursorX(), Fe2D.input.cursorY())) {
+            pressAction.onPress(this);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void fixedUpdate() {
+    }
+
+    @Override
+    public void update() {
+        if (isCursorHover(Fe2D.input.cursorX(), Fe2D.input.cursorY())) {
+            hoverAction.onHover(this, Fe2D.input.cursorX(), Fe2D.input.cursorY());
+        }
+    }
+
+    @Override
+    public void lateUpdate() {
     }
 
     @Override

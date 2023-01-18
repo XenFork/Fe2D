@@ -18,6 +18,7 @@
 
 package union.xenfork.fe2d.gui.widget;
 
+import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Input;
 import union.xenfork.fe2d.gui.Drawable;
 import union.xenfork.fe2d.gui.Focusable;
@@ -126,9 +127,9 @@ public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
     @Override
     public boolean isCursorHover(double cursorX, double cursorY) {
         return cursorX >= x() &&
-               cursorY >= y() &&
+               (Fe2D.graphics.height() - cursorY) >= y() &&
                cursorX < x() + width() &&
-               cursorY < y() + height();
+               (Fe2D.graphics.height() - cursorY) < y() + height();
     }
 
     @Override

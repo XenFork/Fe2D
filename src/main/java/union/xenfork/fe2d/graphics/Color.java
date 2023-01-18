@@ -30,9 +30,150 @@ public final class Color {
      */
     public static final Color WHITE = new Color(0xffffffff);
     /**
+     * light gray
+     */
+    public static final Color LIGHT_GRAY = new Color(0xffbfbfbf);
+    /**
+     * gray
+     */
+    public static final Color GRAY = new Color(0xff7f7f7f);
+    /**
+     * dark gray
+     */
+    public static final Color DARK_GRAY = new Color(0xff3f3f3f);
+    /**
+     * black
+     */
+    public static final Color BLACK = new Color(0xff000000);
+
+    /**
      * The packed white color bits.
      */
     public static final int WHITE_BITS = rgbaPackABGR(1f, 1f, 1f, 1f);
+
+    /**
+     * clear
+     */
+    public static final Color CLEAR = new Color(0x00000000);
+
+    /**
+     * blue
+     */
+    public static final Color BLUE = new Color(0xff0000ff);
+    /**
+     * navy
+     */
+    public static final Color NAVY = new Color(0xff000080);
+    /**
+     * royal
+     */
+    public static final Color ROYAL = new Color(0xff4169e1);
+    /**
+     * slate
+     */
+    public static final Color SLATE = new Color(0xff708090);
+    /**
+     * sky
+     */
+    public static final Color SKY = new Color(0xff87ceeb);
+    /**
+     * cyan
+     */
+    public static final Color CYAN = new Color(0xff00ffff);
+    /**
+     * teal
+     */
+    public static final Color TEAL = new Color(0xff008080);
+
+    /**
+     * green
+     */
+    public static final Color GREEN = new Color(0xff00ff00);
+    /**
+     * chartreuse
+     */
+    public static final Color CHARTREUSE = new Color(0xff7fff00);
+    /**
+     * lime
+     */
+    public static final Color LIME = new Color(0xff32cd32);
+    /**
+     * forest
+     */
+    public static final Color FOREST = new Color(0xff228b22);
+    /**
+     * olive
+     */
+    public static final Color OLIVE = new Color(0xff6b8e23);
+
+    /**
+     * yellow
+     */
+    public static final Color YELLOW = new Color(0xffffff00);
+    /**
+     * gold
+     */
+    public static final Color GOLD = new Color(0xffffd700);
+    /**
+     * goldenrod
+     */
+    public static final Color GOLDENROD = new Color(0xffdaa520);
+    /**
+     * orange
+     */
+    public static final Color ORANGE = new Color(0xffffa500);
+
+    /**
+     * brown
+     */
+    public static final Color BROWN = new Color(0xff8b4513);
+    /**
+     * tan
+     */
+    public static final Color TAN = new Color(0xffd2b48c);
+    /**
+     * firebrick
+     */
+    public static final Color FIREBRICK = new Color(0xffb22222);
+
+    /**
+     * red
+     */
+    public static final Color RED = new Color(0xffff0000);
+    /**
+     * scarlet
+     */
+    public static final Color SCARLET = new Color(0xffff341c);
+    /**
+     * coral
+     */
+    public static final Color CORAL = new Color(0xffff7f50);
+    /**
+     * salmon
+     */
+    public static final Color SALMON = new Color(0xfffa8072);
+    /**
+     * pink
+     */
+    public static final Color PINK = new Color(0xffff69b4);
+    /**
+     * magenta
+     */
+    public static final Color MAGENTA = new Color(0xffff00ff);
+
+    /**
+     * purple
+     */
+    public static final Color PURPLE = new Color(0xffa020f0);
+    /**
+     * violet
+     */
+    public static final Color VIOLET = new Color(0xffee82ee);
+    /**
+     * maroon
+     */
+    public static final Color MAROON = new Color(0xffb03060);
+
     private static final float INV_BYTE_TO_FLOAT = 1.0f / 255.0f;
     private final byte r, g, b, a;
 
