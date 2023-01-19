@@ -21,26 +21,35 @@ package union.xenfork.fe2d.gui.widget.button;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.batch.SpriteBatch;
-import union.xenfork.fe2d.graphics.texture.Texture;
 
 /**
  * The GUI button with a colored rectangle.
+ *
  * @author squid233
  * @since 0.1.0
  */
 public class RectButton extends GUIButton {
     /**
+     * The default button color.
+     */
+    public static final Color DEFAULT_COLOR = new Color(0xff2c974b);
+    /**
+     * The default button hover color.
+     */
+    public static final Color DEFAULT_HOVER_COLOR = new Color(0xff2da44e);
+    /**
      * The color of this button.
      */
-    protected Color color = Color.SKY;
+    protected Color color = DEFAULT_COLOR;
     /**
      * The hovering color of this button.
      */
-    protected Color hoverColor = Color.SKY;// TODO: 2023/1/18 highlighting
+    protected Color hoverColor = DEFAULT_HOVER_COLOR;
 
     /**
-     * Creates the GUI button with the given position, size and actions.
+     * Creates a GUI button with the given position, size and actions.
      *
+     * @param text        the initial text.
      * @param x           the initial position x.
      * @param y           the initial position y.
      * @param width       the initial width.
@@ -48,33 +57,35 @@ public class RectButton extends GUIButton {
      * @param pressAction the action to be performed on pressing this button.
      * @param hoverAction the action to be performed on hovering this button.
      */
-    public RectButton(float x, float y, int width, int height, PressAction pressAction, HoverAction hoverAction) {
-        super(x, y, width, height, pressAction, hoverAction);
+    public RectButton(String text, float x, float y, int width, int height, PressAction pressAction, HoverAction hoverAction) {
+        super(text, x, y, width, height, pressAction, hoverAction);
     }
 
     /**
-     * Creates the GUI button with the given position, size and action.
+     * Creates a GUI button with the given position, size and action.
      *
+     * @param text        the initial text.
      * @param x           the initial position x.
      * @param y           the initial position y.
      * @param width       the initial width.
      * @param height      the initial height.
      * @param pressAction the action to be performed on pressing this button.
      */
-    public RectButton(float x, float y, int width, int height, PressAction pressAction) {
-        super(x, y, width, height, pressAction);
+    public RectButton(String text, float x, float y, int width, int height, PressAction pressAction) {
+        super(text, x, y, width, height, pressAction);
     }
 
     /**
-     * Creates the GUI button with the given position and size.
+     * Creates a GUI button with the given position and size.
      *
+     * @param text   the initial text.
      * @param x      the initial position x.
      * @param y      the initial position y.
      * @param width  the initial width.
      * @param height the initial height.
      */
-    public RectButton(float x, float y, int width, int height) {
-        super(x, y, width, height);
+    public RectButton(String text, float x, float y, int width, int height) {
+        super(text, x, y, width, height);
     }
 
     @Override
@@ -85,24 +96,25 @@ public class RectButton extends GUIButton {
             batch.begin();
         }
         int currColor = batch.spriteColor();
-        batch.setSpriteColor(isCursorHover(cursorX, cursorY) ? color() : hoverColor());
-        batch.draw(Texture.whiteDot(), x(), y(), width(), height());
+        batch.setSpriteColor(isCursorHover(cursorX, cursorY) ? hoverColor() : color());
+        batch.draw(null, x(), y(), width(), height());
         batch.setSpriteColor(currColor);
         if (notDrawing) {
             batch.end();
         }
+        renderText();
     }
 
     public Color color() {
         return color;
     }
 
-    public Color hoverColor() {
-        return hoverColor;
-    }
-
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    public Color hoverColor() {
+        return hoverColor;
     }
 
     public void setHoverColor(Color hoverColor) {

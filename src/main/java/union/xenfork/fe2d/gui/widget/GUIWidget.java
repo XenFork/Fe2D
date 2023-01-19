@@ -127,9 +127,9 @@ public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
     @Override
     public boolean isCursorHover(double cursorX, double cursorY) {
         return cursorX >= x() &&
-               (Fe2D.graphics.height() - cursorY) >= y() &&
                cursorX < x() + width() &&
-               (Fe2D.graphics.height() - cursorY) < y() + height();
+               (Fe2D.graphics.height() - cursorY) > y() &&
+               (Fe2D.graphics.height() - cursorY) <= y() + height();
     }
 
     @Override

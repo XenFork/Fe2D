@@ -27,7 +27,6 @@ import union.xenfork.fe2d.graphics.batch.SpriteBatch;
 import union.xenfork.fe2d.graphics.font.Font;
 import union.xenfork.fe2d.graphics.font.TextRenderer;
 import union.xenfork.fe2d.graphics.font.Unifont;
-import union.xenfork.fe2d.graphics.texture.Texture;
 
 /**
  * The global objects of Fork Engine 2D.
@@ -167,9 +166,6 @@ public final class Fe2D {
         }
         if (spriteBatch != null) {
             spriteBatch.dispose();
-        }
-        if (Texture.hasWhiteDot()) {
-            Texture.whiteDot().dispose();
         }
     }
 }

@@ -20,6 +20,7 @@ package union.xenfork.fe2d;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWErrorCallbackI;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -189,6 +190,7 @@ public class Application implements Updatable, Disposable {
                     Fe2D.dispose();
                     dispose();
                 } finally {
+                    Callbacks.glfwFreeCallbacks(window);
                     glfwDestroyWindow(window);
                 }
             } finally {

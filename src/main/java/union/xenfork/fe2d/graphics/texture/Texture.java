@@ -19,13 +19,10 @@
 package union.xenfork.fe2d.graphics.texture;
 
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.MemoryUtil;
 import org.overrun.binpacking.PackerRegionSize;
 import union.xenfork.fe2d.Disposable;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
-
-import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL30C.*;
 
@@ -40,10 +37,6 @@ public class Texture implements Disposable, PackerRegionSize {
      * The texture with id 0.
      */
     public static final Texture ZERO = new Texture(0);
-    /**
-     * A simple dot.
-     */
-    private static Texture whiteDot;
     private final int id;
     private final int width;
     private final int height;
@@ -84,30 +77,6 @@ public class Texture implements Disposable, PackerRegionSize {
                 glTexParameteri(GL_TEXTURE_2D, e.getKey(), e.getValue());
             }
         }
-    }
-
-    /**
-     * Returns {@code true} if the white dot texture is created.
-     *
-     * @return {@code true} if the white dot texture is created.
-     */
-    public static boolean hasWhiteDot() {
-        return whiteDot != null;
-    }
-
-    /**
-     * Gets the white dot texture, or creates a new one if it is not created.
-     *
-     * @return the white dot texture.
-     */
-    public static Texture whiteDot() {
-        if (whiteDot == null) {
-            ByteBuffer buffer = MemoryUtil.memAlloc(4).putInt(0, 0xffffffff);
-            NativeImage image = NativeImage.ofRawBuffer(1, 1, buffer);
-            whiteDot = ofImage(image, null, GL_RGBA8, GL_RGBA);
-            image.dispose();
-        }
-        return whiteDot;
     }
 
     /**

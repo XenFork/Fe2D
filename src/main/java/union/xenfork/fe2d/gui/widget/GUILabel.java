@@ -21,6 +21,7 @@ package union.xenfork.fe2d.gui.widget;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.font.Font;
 import union.xenfork.fe2d.graphics.font.TextRenderer;
+import union.xenfork.fe2d.gui.layout.Alignment;
 
 /**
  * The GUI label which is a text rendered on the screen.
@@ -29,8 +30,22 @@ import union.xenfork.fe2d.graphics.font.TextRenderer;
  * @since 0.1.0
  */
 public class GUILabel extends GUIWidget {
-    private String text;
-    private Font font;
+    /**
+     * The text of this label.
+     */
+    protected String text;
+    /**
+     * The font of this label.
+     */
+    protected Font font;
+    /**
+     * The vertical alignment of the text.
+     */
+    protected Alignment.V verticalAlign = Alignment.V.LEFT;
+    /**
+     * The pixels height of the font.
+     */
+    protected float pixelsHeight = TextRenderer.DEFAULT_PIXELS_HEIGHT;
 
     /**
      * Creates a label with the given position and text.
@@ -75,7 +90,11 @@ public class GUILabel extends GUIWidget {
         if (notDrawing) {
             renderer.begin();
         }
-        renderer.draw(font(), text(), x(), y());
+        renderer.draw(font(),
+            text(),
+            x(), y(),
+            verticalAlign(),
+            pixelsHeight());
         if (notDrawing) {
             renderer.end();
         }
@@ -120,13 +139,49 @@ public class GUILabel extends GUIWidget {
         return font;
     }
 
+    /**
+     * Sets the vertical alignment of the font of this label.
+     *
+     * @param verticalAlign the vertical alignment of the font of this label.
+     */
+    public void setVerticalAlign(Alignment.V verticalAlign) {
+        this.verticalAlign = verticalAlign;
+    }
+
+    /**
+     * Gets the vertical alignment of the font of this label.
+     *
+     * @return the vertical alignment of the font of this label.
+     */
+    public Alignment.V verticalAlign() {
+        return verticalAlign;
+    }
+
+    /**
+     * Sets the pixels height of the font of this label.
+     *
+     * @param pixelsHeight the pixels height of the font of this label.
+     */
+    public void setPixelsHeight(float pixelsHeight) {
+        this.pixelsHeight = pixelsHeight;
+    }
+
+    /**
+     * Gets the pixels height of the font of this label.
+     *
+     * @return the pixels height of the font of this label.
+     */
+    public float pixelsHeight() {
+        return pixelsHeight;
+    }
+
     @Override
     public int width() {
-        return font().getTextWidth(text());
+        return (int) Math.floor(font().getScale(pixelsHeight()) * font().getTextWidth(text()));
     }
 
     @Override
     public int height() {
-        return font().getTextHeight(text());
+        return (int) Math.floor(font().getScale(pixelsHeight()) * font().getTextHeight(text()));
     }
 }

@@ -69,6 +69,7 @@ public final class Breakout extends Game {
     public static final ResourcePath BLOCK_SOLID = new ResourcePath("breakout:texture/block_solid.png");
     public static final ResourcePath FACE = new ResourcePath("breakout:texture/face.png");
     public static final ResourcePath PADDLE = new ResourcePath("breakout:texture/paddle.png");
+    public static final ResourcePath TRUE_TYPE_FONT = new ResourcePath("breakout:test.ttf");
     private static final String XENFORK_STR = "氙叉联盟 (XenFork Union)";
     private ShaderProgram shaderProgram;
     private Mesh backgroundMesh;
@@ -166,7 +167,6 @@ public final class Breakout extends Game {
 
         batch = new SpriteBatch();
         batch.setProjectionMatrix(projectionMatrix);
-        Fe2D.setSpriteRenderer(batch);
 
         player = new Sprite(textureAtlas, textureAtlas.get(PADDLE));
         player.size.set(PLAYER_SIZE_WIDTH, PLAYER_SIZE_HEIGHT);
@@ -187,6 +187,7 @@ public final class Breakout extends Game {
         // note: we just simply get the Chinese characters from the constant.
         // the emoji might be white square.
         trueTypeFont = TrueTypeFont.load(Font.ASCII + XENFORK_STR.substring(0, 4) + "🚀", Fe2D.files.local("test.ttf"));
+        Fe2D.assets.putAsset(TRUE_TYPE_FONT, trueTypeFont);
 
         openScreen(new MenuScreen());
     }
@@ -320,7 +321,6 @@ public final class Breakout extends Game {
         dispose(shaderProgram);
         dispose(backgroundMesh);
         dispose(batch);
-        dispose(trueTypeFont);
         MemoryUtil.memFree(trueTypeFont.fontData());
     }
 

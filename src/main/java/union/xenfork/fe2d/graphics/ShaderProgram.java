@@ -234,6 +234,16 @@ public final class ShaderProgram implements Disposable {
      * @param name  the name of the uniform.
      * @param value the value.
      */
+    public void setUniform(String name, boolean value) {
+        setUniform(name, value ? GL_TRUE : GL_FALSE);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
     public void setUniform(String name, int value) {
         getUniform(name, ShaderUniform.Type.INT).orElseThrow()
             .markDirty()

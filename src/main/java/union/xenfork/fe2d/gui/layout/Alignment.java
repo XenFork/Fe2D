@@ -40,13 +40,29 @@ public final class Alignment {
          */
         LEFT,
         /**
-         * Aligns to center. The origin x position is computed as {@code x + (boxWidth - textWidth) * 0.5}.
+         * Aligns to center. The origin x position is computed as {@code (boxWidth - textWidth) * 0.5}.
          */
         CENTER,
         /**
          * Aligns to right. The origin x position is computed as {@code boxWidth - textWidth}.
          */
-        RIGHT
+        RIGHT;
+
+
+        /**
+         * Gets the position x that offset with the vertical alignment of this alignment.
+         *
+         * @param textWidth the text width in scaled coordinates.
+         * @param boxWidth  the text box width.
+         * @return the position x.
+         */
+        public float getTextPositionX(float originX, float textWidth, float boxWidth) {
+            return switch (this) {
+                case LEFT -> originX;
+                case CENTER -> originX + (boxWidth - textWidth) * 0.5f;
+                case RIGHT -> originX + boxWidth - textWidth;
+            };
+        }
     }
 
     /**
@@ -57,16 +73,31 @@ public final class Alignment {
      */
     public enum H {
         /**
-         * Aligns to top. The origin y position is computed as {@code boxHeight - textHeight}.
+         * Aligns to bottom. The origin y position is computed as {@code 0}.
          */
-        TOP,
+        BOTTOM,
         /**
-         * Aligns to center. The origin y position is computed as {@code y + (boxHeight - textHeight) * 0.5}.
+         * Aligns to center. The origin y position is computed as {@code (boxHeight - textHeight) * 0.5}.
          */
         CENTER,
         /**
-         * Aligns to bottom. The origin y position is computed as {@code 0}.
+         * Aligns to top. The origin y position is computed as {@code boxHeight - textHeight}.
          */
-        BOTTOM
+        TOP;
+
+        /**
+         * Gets the position y that offset with the horizontal alignment of this alignment.
+         *
+         * @param textHeight the text height in scaled coordinates.
+         * @param boxHeight  the text box height.
+         * @return the position x.
+         */
+        public float getTextPositionY(float originY, float textHeight, float boxHeight) {
+            return switch (this) {
+                case BOTTOM -> originY;
+                case CENTER -> originY + (boxHeight - textHeight) * 0.5f;
+                case TOP -> originY + boxHeight - textHeight;
+            };
+        }
     }
 }

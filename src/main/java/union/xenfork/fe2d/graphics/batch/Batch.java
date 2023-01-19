@@ -96,7 +96,9 @@ public interface Batch extends Disposable {
 
     void setModelMatrix(Matrix4fc modelMatrix);
 
-    void setBlendDisabled(boolean blendDisabled);
+    void enableBlend();
+
+    void disableBlend();
 
     void setBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
 

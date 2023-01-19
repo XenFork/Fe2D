@@ -20,6 +20,7 @@ package union.xenfork.fe2d.test.breakout;
 
 import org.jetbrains.annotations.Nullable;
 import union.xenfork.fe2d.Fe2D;
+import union.xenfork.fe2d.gui.layout.Alignment;
 import union.xenfork.fe2d.gui.screen.Screen;
 import union.xenfork.fe2d.gui.widget.GUILabel;
 
@@ -42,6 +43,7 @@ public final class GameOverScreen extends Screen {
     protected void init() {
         super.init();
         label = addWidget(new GUILabel((win ? "You win!" : "Game Over") + "\nPress ENTER or ESCAPE to back to menu"));
+        label.setVerticalAlign(Alignment.V.CENTER);
     }
 
     @Override

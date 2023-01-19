@@ -162,7 +162,7 @@ public final class TrueTypeFont implements Font {
     public int getTextHeight(String text) {
         int height = 0;
         for (int i = 0, c = (int) text.lines().count(); i < c; i++) {
-            height += getAdvanceY();
+            height += (i == c - 1) ? (getAscent() - getDescent()) : getAdvanceY();
         }
         return height;
     }

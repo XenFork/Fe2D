@@ -24,10 +24,12 @@ import org.lwjgl.system.MemoryStack;
 import union.xenfork.fe2d.Disposable;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.Color;
+import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
 import union.xenfork.fe2d.graphics.mesh.Mesh;
 import union.xenfork.fe2d.graphics.vertex.VertexAttribute;
 import union.xenfork.fe2d.graphics.vertex.VertexLayout;
+import union.xenfork.fe2d.gui.layout.Alignment;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -43,6 +45,10 @@ import static union.xenfork.fe2d.graphics.GLStateManager.*;
  * @since 0.1.0
  */
 public final class TextRenderer implements Disposable {
+    /**
+     * The default pixels height.
+     */
+    public static final float DEFAULT_PIXELS_HEIGHT = 20f;
     private static final VertexLayout LAYOUT = new VertexLayout(
         VertexAttribute.position2().getImplicit(),
         VertexAttribute.texCoord(0).getImplicit()
@@ -98,6 +104,7 @@ public final class TextRenderer implements Disposable {
             LAYOUT);
         mesh.setDefaultDrawMode(GL_TRIANGLE_FAN);
         texture = glGenTextures();
+        int currTex = textureBinding2D();
         bindTexture2D(texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -105,6 +112,7 @@ public final class TextRenderer implements Disposable {
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0f);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         resize(Fe2D.graphics.width(), Fe2D.graphics.height());
+        bindTexture2D(currTex);
     }
 
     public static TextRenderer getInstance() {
@@ -153,10 +161,10 @@ public final class TextRenderer implements Disposable {
         int sAlpha = blendSrcAlpha();
         int dAlpha = blendDstAlpha();
         if (blendDisabled && blend) {
-            disableBlend();
+            GLStateManager.disableBlend();
         } else if (!blendDisabled) {
             if (!blend) {
-                enableBlend();
+                GLStateManager.enableBlend();
             }
             blendFuncSeparate(blendSrcRGB, blendDstRGB, blendSrcAlpha, blendDstAlpha);
         }
@@ -168,10 +176,10 @@ public final class TextRenderer implements Disposable {
         bindTexture2D(currTex);
         useProgram(currPrg);
         if (blendDisabled && blend) {
-            enableBlend();
+            GLStateManager.enableBlend();
         } else if (!blendDisabled) {
             if (!blend) {
-                disableBlend();
+                GLStateManager.disableBlend();
             }
             blendFuncSeparate(sRGB, dRGB, sAlpha, dAlpha);
         }
@@ -217,20 +225,31 @@ public final class TextRenderer implements Disposable {
         }
     }
 
-    public void draw(Font font, String text, float x, float y, float pixelHeight) {
+    public void draw(Font font, String text, float x, float y, Alignment.V verticalAlign, float pixelHeight) {
         checkDrawing();
         float scale = font.getScale(pixelHeight);
         float yAdvance = scale * font.getAdvanceY();
+        float boxWidth = scale * font.getTextWidth(text);
         String[] lines = text.lines().toArray(String[]::new);
         for (int i = lines.length - 1; i >= 0; i--) {
-            drawRaw(font, lines[i], x, y, pixelHeight);
+            String line = lines[i];
+            drawRaw(font,
+                line,
+                verticalAlign.getTextPositionX(x, scale * font.getTextWidth(line), boxWidth),
+                y,
+                pixelHeight);
             y += yAdvance;
         }
     }
 
+    public void draw(Font font, String text, float x, float y, Alignment.V verticalAlign) {
+        checkDrawing();
+        draw(font, text, x, y, verticalAlign, DEFAULT_PIXELS_HEIGHT);
+    }
+
     public void draw(Font font, String text, float x, float y) {
         checkDrawing();
-        draw(font, text, x, y, 20f);
+        draw(font, text, x, y, Alignment.V.LEFT);
     }
 
     public Matrix4f projectionMatrix() {
@@ -240,20 +259,37 @@ public final class TextRenderer implements Disposable {
     public void setProjectionMatrix(Matrix4fc projectionMatrix) {
         if (drawing) flush();
         this.projectionMatrix.set(projectionMatrix);
-        if (drawing) setupMatrices();
+        if (drawing) {
+            int currProgram = currentProgram();
+            shader.use();
+            setupMatrices();
+            useProgram(currProgram);
+        }
     }
 
-    public void setBlendDisabled(boolean blendDisabled) {
-        if (drawing) flush();
-        this.blendDisabled = blendDisabled;
+    public void enableBlend() {
+        if (!blendDisabled) return;
+        flush();
+        blendDisabled = false;
+    }
+
+    public void disableBlend() {
+        if (blendDisabled) return;
+        flush();
+        blendDisabled = true;
     }
 
     public void setBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha) {
-        if (drawing && !blendDisabled) flush();
-        blendSrcRGB = srcRGB;
-        blendDstRGB = dstRGB;
-        blendSrcAlpha = srcAlpha;
-        blendDstAlpha = dstAlpha;
+        if (blendSrcRGB != srcRGB ||
+            blendDstRGB != dstRGB ||
+            blendSrcAlpha != srcAlpha ||
+            blendDstAlpha != dstAlpha) {
+            flush();
+            blendSrcRGB = srcRGB;
+            blendDstRGB = dstRGB;
+            blendSrcAlpha = srcAlpha;
+            blendDstAlpha = dstAlpha;
+        }
     }
 
     public void setBlendFunc(int srcFactor, int dstFactor) {

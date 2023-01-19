@@ -85,12 +85,36 @@ public interface Font extends Disposable {
         return getFontCodePoints().codePoints().allMatch(value -> value != codePoint);
     }
 
+    /**
+     * Gets the width of the glyph of the given codepoint.
+     *
+     * @param codePoint the codepoint.
+     * @return the width in unscaled coordinates.
+     */
     int getGlyphWidth(int codePoint);
 
+    /**
+     * Gets the height of the glyph of the given codepoint.
+     *
+     * @param codePoint the codepoint.
+     * @return the height in unscaled coordinates.
+     */
     int getGlyphHeight(int codePoint);
 
+    /**
+     * Gets the width of the box around the given text.
+     *
+     * @param text the text.
+     * @return the width in unscaled coordinates.
+     */
     int getTextWidth(String text);
 
+    /**
+     * Gets the height of the box around the given text.
+     *
+     * @param text the text.
+     * @return the height in unscaled coordinates.
+     */
     int getTextHeight(String text);
 
     /**

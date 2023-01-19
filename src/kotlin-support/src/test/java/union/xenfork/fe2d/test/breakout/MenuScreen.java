@@ -18,8 +18,10 @@
 
 package union.xenfork.fe2d.test.breakout;
 
+import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.gui.screen.Screen;
 import union.xenfork.fe2d.gui.widget.GUILabel;
+import union.xenfork.fe2d.gui.widget.button.GUIButton;
 import union.xenfork.fe2d.gui.widget.button.RectButton;
 
 /**
@@ -30,6 +32,7 @@ import union.xenfork.fe2d.gui.widget.button.RectButton;
  */
 public final class MenuScreen extends Screen {
     private GUILabel label;
+    private GUIButton button;
 
     /**
      * Creates the screen.
@@ -42,7 +45,9 @@ public final class MenuScreen extends Screen {
     protected void init() {
         super.init();
         label = addWidget(new GUILabel("Press ENTER to start"));
-        addWidget(new RectButton(0, 0, 100, 100, System.out::println));
+        button = addWidget(new RectButton("Test", 0, 0, 100, 50, System.out::println));
+        button.setTextFont(Fe2D.assets.getAsset(Breakout.TRUE_TYPE_FONT));
+        button.setTextPixelsHeight(32f);
     }
 
     @Override
@@ -50,6 +55,7 @@ public final class MenuScreen extends Screen {
         super.onResize(width, height);
         label.setPosition((width - label.width()) * .5f,
             (height - label.height()) * .5f);
+        button.setX(width - button.width());
     }
 
     @Override
