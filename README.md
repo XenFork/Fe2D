@@ -1,4 +1,10 @@
-# Fork Engine 2D
+# Fork Engine 2D ![License](https://img.shields.io/github/license/XenFork/Fe2D)
+
+[![Java CI with Gradle](https://github.com/XenFork/Fe2D/actions/workflows/gradle.yml/badge.svg?branch=0.x&event=push)](https://github.com/XenFork/Fe2D/actions/workflows/gradle.yml)
+[![CodeQL](https://github.com/XenFork/Fe2D/actions/workflows/codeql-analysis.yml/badge.svg?branch=0.x&event=push)](https://github.com/XenFork/Fe2D/actions/workflows/codeql-analysis.yml)
+
+![Maven Central](https://img.shields.io/maven-central/v/io.github.xenfork/fe2d)
+![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/io.github.xenfork/fe2d?server=https%3A%2F%2Fs01.oss.sonatype.org%2F)
 
 Fork Engine 2D implemented with Java 17 and LWJGL 3.
 

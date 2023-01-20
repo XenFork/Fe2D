@@ -45,9 +45,9 @@ public final class MenuScreen extends Screen {
     protected void init() {
         super.init();
         label = addWidget(new GUILabel("Press ENTER to start"));
-        button = addWidget(new RectButton("Test", 0, 0, 100, 50, System.out::println));
+        button = addWidget(new RectButton("Pressing\nHovering", 0, 0, 100, 50, System.out::println));
         button.setTextFont(Fe2D.assets.getAsset(Breakout.TRUE_TYPE_FONT));
-        button.setTextPixelsHeight(32f);
+        button.setTextPixelsHeight(24f);
     }
 
     @Override

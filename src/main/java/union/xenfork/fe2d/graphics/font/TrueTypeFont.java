@@ -148,7 +148,7 @@ public final class TrueTypeFont implements Font {
                 for (int i = 0, len = line.codePointCount(0, line.length()); i < len; i++) {
                     int codePoint = line.codePointAt(i);
                     getGlyphHMetrics(codePoint, pAdvance, pBearing);
-                    width += pAdvance.get(0) - pBearing.get(0);
+                    width += pAdvance.get(0);
                     if (i < len - 1) {
                         width += getKernAdvance(codePoint, line.codePointAt(i + 1));
                     }

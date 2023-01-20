@@ -159,6 +159,7 @@ public abstract class GUIButton extends GUIWidget implements Updatable {
         }
         x = verticalAlign.getTextPositionX(x, scale * textFont().getTextWidth(text()), width());
         y = horizontalAlign.getTextPositionY(y, scale * textFont().getTextHeight(text()), height());
+        y -= scale * textFont().getDescent();
         textRenderer.draw(textFont(),
             text(),
             x, y,
