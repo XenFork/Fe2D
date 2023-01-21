@@ -47,9 +47,10 @@ public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
     /**
      * Performs the action defined with the subclasses.
      *
+     * @param force if {@code true}, forcing to perform the action.
      * @return {@code true} if an operation has been performed successfully and should finish; {@code false} otherwise.
      */
-    public boolean perform() {
+    public boolean perform(boolean force) {
         return false;
     }
 
@@ -121,7 +122,7 @@ public abstract class GUIWidget implements GUIElement, Drawable, Focusable {
 
     @Override
     public boolean onMousePress(int button, int mods) {
-        return button == Input.MOUSE_BUTTON_LEFT && perform();
+        return button == Input.MOUSE_BUTTON_LEFT && perform(false);
     }
 
     @Override

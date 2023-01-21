@@ -228,7 +228,7 @@ public abstract class Screen implements GUIParentElement, Drawable, Updatable {
         }
         if (key == Input.KEY_ENTER) {
             if (focusIndex != -1) {
-                return getFocusedWidget().perform();
+                return getFocusedWidget().perform(true);
             }
         }
         return GUIParentElement.super.onKeyPress(key, scancode, mods);

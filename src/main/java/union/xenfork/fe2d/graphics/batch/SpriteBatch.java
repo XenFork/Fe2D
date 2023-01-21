@@ -71,6 +71,7 @@ public class SpriteBatch implements Batch {
     private int drawnSpriteCount = 0;
     private Texture lastTexture;
     private float invTexWidth, invTexHeight;
+    private boolean lastHasTexture = false;
     private boolean disposed = false;
 
     /**
@@ -203,9 +204,12 @@ public class SpriteBatch implements Batch {
             blendFuncSeparate(blendSrcRGB, blendDstRGB, blendSrcAlpha, blendDstAlpha);
         }
         shader().use();
-        setupMatrices();
         boolean hasTexture = lastTexture != null;
-        shader().setUniform("HasTexture0", hasTexture ? 1 : 0);
+        if (lastHasTexture != hasTexture) {
+            lastHasTexture = hasTexture;
+            shader().setUniform("HasTexture0", hasTexture ? 1 : 0);
+        }
+        setupMatrices();
         if (hasTexture) {
             lastTexture.bind();
         }

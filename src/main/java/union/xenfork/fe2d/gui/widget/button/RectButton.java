@@ -37,14 +37,6 @@ public class RectButton extends GUIButton {
      * The default button hover color.
      */
     public static final Color DEFAULT_HOVER_COLOR = new Color(0xff2da44e);
-    /**
-     * The color of this button.
-     */
-    protected Color color = DEFAULT_COLOR;
-    /**
-     * The hovering color of this button.
-     */
-    protected Color hoverColor = DEFAULT_HOVER_COLOR;
 
     /**
      * Creates a GUI button with the given position, size and actions.
@@ -59,6 +51,8 @@ public class RectButton extends GUIButton {
      */
     public RectButton(String text, float x, float y, int width, int height, PressAction pressAction, HoverAction hoverAction) {
         super(text, x, y, width, height, pressAction, hoverAction);
+        setColor(DEFAULT_COLOR);
+        setHoverColor(DEFAULT_HOVER_COLOR);
     }
 
     /**
@@ -73,6 +67,8 @@ public class RectButton extends GUIButton {
      */
     public RectButton(String text, float x, float y, int width, int height, PressAction pressAction) {
         super(text, x, y, width, height, pressAction);
+        setColor(DEFAULT_COLOR);
+        setHoverColor(DEFAULT_HOVER_COLOR);
     }
 
     /**
@@ -86,6 +82,8 @@ public class RectButton extends GUIButton {
      */
     public RectButton(String text, float x, float y, int width, int height) {
         super(text, x, y, width, height);
+        setColor(DEFAULT_COLOR);
+        setHoverColor(DEFAULT_HOVER_COLOR);
     }
 
     @Override
@@ -103,21 +101,5 @@ public class RectButton extends GUIButton {
             batch.end();
         }
         renderText();
-    }
-
-    public Color color() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
-
-    public Color hoverColor() {
-        return hoverColor;
-    }
-
-    public void setHoverColor(Color hoverColor) {
-        this.hoverColor = hoverColor;
     }
 }

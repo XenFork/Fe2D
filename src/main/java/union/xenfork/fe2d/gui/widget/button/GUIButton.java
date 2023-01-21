@@ -56,11 +56,34 @@ public abstract class GUIButton extends GUIWidget implements Updatable {
      * The action to be performed on hovering on this button.
      */
     protected HoverAction hoverAction;
+    /**
+     * The text of this button.
+     */
     protected String text;
+    /**
+     * The text color of this button.
+     */
     protected Color textColor = Color.WHITE;
+    /**
+     * The text font of this button.
+     */
     protected Font textFont;
+    /**
+     * The text pixels height of this button.
+     */
     protected float textPixelsHeight = TextRenderer.DEFAULT_PIXELS_HEIGHT;
+    /**
+     * The text layout of this button.
+     */
     protected TextLayout textLayout;
+    /**
+     * The color of this button.
+     */
+    protected Color color = Color.WHITE;
+    /**
+     * The hovering color of this button.
+     */
+    protected Color hoverColor = Color.WHITE;
 
     /**
      * Creates a GUI button with the given text, position, size and actions.
@@ -171,22 +194,47 @@ public abstract class GUIButton extends GUIWidget implements Updatable {
         }
     }
 
+    /**
+     * Gets the text of this button.
+     *
+     * @return the text of this button.
+     */
     public String text() {
         return text;
     }
 
+    /**
+     * Sets the text of this button.
+     *
+     * @param text the text of this button.
+     */
     public void setText(String text) {
         this.text = text;
     }
 
+    /**
+     * Gets the text color of this button.
+     *
+     * @return the text color of this button.
+     */
     public Color textColor() {
         return textColor;
     }
 
+    /**
+     * Sets the text color of this button.
+     *
+     * @param textColor the text color of this button.
+     */
     public void setTextColor(Color textColor) {
         this.textColor = textColor;
     }
 
+    /**
+     * Gets the text font of this button.
+     *
+     * @return the text font of this button.
+     */
     public Font textFont() {
         if (textFont == null) {
             textFont = Fe2D.defaultFont();
@@ -194,29 +242,101 @@ public abstract class GUIButton extends GUIWidget implements Updatable {
         return textFont;
     }
 
+    /**
+     * Sets the text font of this button.
+     *
+     * @param textFont the text font of this button.
+     */
     public void setTextFont(Font textFont) {
         this.textFont = textFont;
     }
 
+    /**
+     * Gets the text pixels height of this button.
+     *
+     * @return the text pixels height of this button.
+     */
     public float textPixelsHeight() {
         return textPixelsHeight;
     }
 
+    /**
+     * Sets the text pixels height of this button.
+     *
+     * @param textPixelsHeight the text pixels height of this button.
+     */
     public void setTextPixelsHeight(float textPixelsHeight) {
         this.textPixelsHeight = textPixelsHeight;
     }
 
+    /**
+     * Sets the text font and text pixels height of this button.
+     *
+     * @param textFont         the text font of this button.
+     * @param textPixelsHeight the text pixels height of this button.
+     */
+    public void setTextFont(Font textFont, float textPixelsHeight) {
+        setTextFont(textFont);
+        setTextPixelsHeight(textPixelsHeight);
+    }
+
+    /**
+     * Gets the text layout of this button.
+     *
+     * @return the text layout of this button.
+     */
     public TextLayout textLayout() {
         return textLayout;
     }
 
+    /**
+     * Sets the text layout of this button.
+     *
+     * @param textLayout the text layout of this button.
+     */
     public void setTextLayout(TextLayout textLayout) {
         this.textLayout = textLayout;
     }
 
+    /**
+     * Gets the color of this button.
+     *
+     * @return the color of this button.
+     */
+    public Color color() {
+        return color;
+    }
+
+    /**
+     * Sets the color of this button.
+     *
+     * @param color the color of this button.
+     */
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
+    /**
+     * Gets the hover color of this button.
+     *
+     * @return the hover color of this button.
+     */
+    public Color hoverColor() {
+        return hoverColor;
+    }
+
+    /**
+     * Sets the hover color of this button.
+     *
+     * @param hoverColor the hover color of this button.
+     */
+    public void setHoverColor(Color hoverColor) {
+        this.hoverColor = hoverColor;
+    }
+
     @Override
-    public boolean perform() {
-        if (isCursorHover(Fe2D.input.cursorX(), Fe2D.input.cursorY())) {
+    public boolean perform(boolean force) {
+        if (force || isCursorHover(Fe2D.input.cursorX(), Fe2D.input.cursorY())) {
             pressAction.onPress(this);
             return true;
         }
