@@ -22,6 +22,8 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -51,7 +53,7 @@ public sealed abstract class FileContext permits InternalFileContext, LocalFileC
         return new IllegalStateException("Failed to load file '" + path() + '\'', e);
     }
 
-    String loadString(BufferedReader br) throws IOException {
+    static String loadString(BufferedReader br) throws IOException {
         StringBuilder sb = new StringBuilder(512);
         String line = br.readLine();
         if (line != null) {
@@ -67,25 +69,28 @@ public sealed abstract class FileContext permits InternalFileContext, LocalFileC
      * Loads as string from this file.
      *
      * @return the string.
+     * @throws IllegalStateException if failed to load the file.
      */
-    public abstract String loadString();
+    public abstract String loadString() throws IllegalStateException;
 
     /**
      * Loads as binary from this file.
      *
      * @param bufferSize the initial buffer size. defaults to {@value #DEFAULT_BUFFER_SIZE}.
      * @return the binary data.
+     * @throws IllegalStateException if failed to load the file.
      * @see #loadBinary()
      */
-    public abstract ByteBuffer loadBinary(long bufferSize);
+    public abstract ByteBuffer loadBinary(long bufferSize) throws IllegalStateException;
 
     /**
      * Loads as binary from this file.
      *
      * @return the binary data.
+     * @throws IllegalStateException if failed to load the file.
      * @see #loadBinary(long)
      */
-    public ByteBuffer loadBinary() {
+    public ByteBuffer loadBinary() throws IllegalStateException {
         return loadBinary(DEFAULT_BUFFER_SIZE);
     }
 
@@ -97,6 +102,26 @@ public sealed abstract class FileContext permits InternalFileContext, LocalFileC
      * that loaded from {@link #loadBinary(long) loadBinary}.
      */
     public abstract boolean shouldFreeBinary();
+
+    /**
+     * Creates a writer for this file context.
+     * <p>
+     * The writer is buffered, and must be explicitly closed. The encoding of the writer is UTF-8.
+     *
+     * @return the buffered writer.
+     * @throws IllegalStateException if the file cannot be written, or failed to create the writer.
+     */
+    public abstract Writer createWriter() throws IllegalStateException;
+
+    /**
+     * Creates an output stream for this file context.
+     * <p>
+     * The output stream is buffered, and must be explicitly closed.
+     *
+     * @return the output stream.
+     * @throws IllegalStateException if the file cannot be written, or failed to create the output stream.
+     */
+    public abstract OutputStream createOutputStream() throws IllegalStateException;
 
     /**
      * Gets the path.

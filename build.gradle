@@ -52,6 +52,7 @@ dependencies {
     api 'org.joml:joml:1.10.5'
     api 'org.slf4j:slf4j-api:2.0.6'
     api 'io.github.over-run:bin-packing:0.2.0'
+    api 'com.google.code.gson:gson:2.10.1'
 
     compileOnly 'org.jetbrains:annotations:23.1.0'
     testCompileOnly 'org.jetbrains:annotations:23.1.0'

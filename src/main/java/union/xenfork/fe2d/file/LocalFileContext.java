@@ -20,9 +20,7 @@ package union.xenfork.fe2d.file;
 
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -75,6 +73,24 @@ public final class LocalFileContext extends FileContext {
     @Override
     public boolean shouldFreeBinary() {
         return true;
+    }
+
+    @Override
+    public Writer createWriter() throws IllegalStateException {
+        try {
+            return new BufferedWriter(new FileWriter(path(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create the writer for '" + path() + "'!", e);
+        }
+    }
+
+    @Override
+    public OutputStream createOutputStream() throws IllegalStateException {
+        try {
+            return new BufferedOutputStream(new FileOutputStream(path()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create the output stream for '" + path() + "'!", e);
+        }
     }
 
     @Override

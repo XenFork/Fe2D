@@ -18,10 +18,7 @@
 
 package union.xenfork.fe2d.file;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
@@ -91,6 +88,16 @@ public final class InternalFileContext extends FileContext {
     @Override
     public boolean shouldFreeBinary() {
         return true;
+    }
+
+    @Override
+    public Writer createWriter() throws IllegalStateException {
+        throw new IllegalStateException("Cannot write files to classpath!");
+    }
+
+    @Override
+    public OutputStream createOutputStream() throws IllegalStateException {
+        throw new IllegalStateException("Cannot write files to classpath!");
     }
 
     @Override

@@ -120,43 +120,95 @@ public class TexturedButton extends GUIButton {
         renderText();
     }
 
+    /**
+     * Gets the texture of this button.
+     *
+     * @return the texture of this button.
+     */
     public Texture texture() {
         return texture;
     }
 
+    /**
+     * Sets the texture of this button.
+     *
+     * @param texture the texture of this button.
+     */
     public void setTexture(Texture texture) {
         this.texture = texture;
     }
 
+    /**
+     * Gets the texture region of this button.
+     *
+     * @return the texture region of this button.
+     */
     public TextureRegion textureRegion() {
         return textureRegion;
     }
 
+    /**
+     * Sets the texture region of this button.
+     *
+     * @param textureRegion the texture region of this button.
+     */
     public void setTextureRegion(TextureRegion textureRegion) {
         this.textureRegion = textureRegion;
     }
 
+    /**
+     * Sets the texture and texture region of this button.
+     *
+     * @param texture       the texture of this button.
+     * @param textureRegion the texture and texture region of this button.
+     */
     public void setTexture(Texture texture, TextureRegion textureRegion) {
         setTexture(texture);
         setTextureRegion(textureRegion);
     }
 
+    /**
+     * Gets the hover texture of this button.
+     *
+     * @return the hover texture of this button.
+     */
     public Texture hoverTexture() {
         return hoverTexture;
     }
 
+    /**
+     * Sets the hover texture of this button.
+     *
+     * @param hoverTexture the hover texture of this button.
+     */
     public void setHoverTexture(Texture hoverTexture) {
         this.hoverTexture = hoverTexture;
     }
 
+    /**
+     * Gets the hover texture region of this button.
+     *
+     * @return the hover texture region of this button.
+     */
     public TextureRegion hoverTextureRegion() {
         return hoverTextureRegion;
     }
 
+    /**
+     * Sets the hover texture region of this button.
+     *
+     * @param hoverTextureRegion the hover texture region of this button.
+     */
     public void setHoverTextureRegion(TextureRegion hoverTextureRegion) {
         this.hoverTextureRegion = hoverTextureRegion;
     }
 
+    /**
+     * Sets the hover texture and hover texture region of this button.
+     *
+     * @param hoverTexture       the hover texture of this button.
+     * @param hoverTextureRegion the hover texture region of this button.
+     */
     public void setHoverTexture(Texture hoverTexture, TextureRegion hoverTextureRegion) {
         setHoverTexture(hoverTexture);
         setHoverTextureRegion(hoverTextureRegion);

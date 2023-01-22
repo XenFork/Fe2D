@@ -56,7 +56,15 @@ public final class MenuScreen extends Screen {
 
         label = addWidget(new GUILabel("Press ENTER to start"));
 
-        button = addWidget(new RectButton("Pressing\nHovering", 0, 0, 100, 50, System.out::println));
+        button = addWidget(new RectButton("Pressing\nHovering", 0, 0, 100, 50, button1 -> {
+            int level = Breakout.getInstance().level;
+            level++;
+            if (level > Breakout.MAX_LEVEL) {
+                level = 1;
+            }
+            Breakout.getInstance().level = level;
+            Breakout.getInstance().jsonConfig.put("level", level);
+        }));
         button.setTextFont(font, 24f);
 
         texturedButton = addWidget(new TexturedButton("Textured Button\nPressing\nHovering", 0, 100, 100, 100, System.out::println));

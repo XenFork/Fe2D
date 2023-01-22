@@ -18,6 +18,7 @@
 
 package union.xenfork.fe2d.test.breakout;
 
+import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector2f;
@@ -26,6 +27,10 @@ import union.xenfork.fe2d.ApplicationConfig;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.Game;
 import union.xenfork.fe2d.Input;
+import union.xenfork.fe2d.config.JsonConfig;
+import union.xenfork.fe2d.config.PropertiesConfig;
+import union.xenfork.fe2d.file.BinaryData;
+import union.xenfork.fe2d.file.BinaryTags;
 import union.xenfork.fe2d.file.FileContext;
 import union.xenfork.fe2d.graphics.GLStateManager;
 import union.xenfork.fe2d.graphics.ShaderProgram;
@@ -42,8 +47,13 @@ import union.xenfork.fe2d.graphics.texture.TextureParam;
 import union.xenfork.fe2d.util.ResourcePath;
 import union.xenfork.fe2d.util.math.Direction;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.joml.Math.*;
 import static org.lwjgl.opengl.GL11C.*;
@@ -56,6 +66,9 @@ import static union.xenfork.fe2d.gui.screen.ScreenUtil.*;
  * @since 0.1.0
  */
 public final class Breakout extends Game {
+    private static Breakout instance;
+    private static final boolean USE_STDERR = true;
+    public static final int MAX_LEVEL = 4;
     public static final int GAME_MENU = 0;
     public static final int GAME_ACTIVE = 1;
     public static final int GAME_WIN = 2;
@@ -80,10 +93,12 @@ public final class Breakout extends Game {
     private TrueTypeFont trueTypeFont;
     private final Vector2f ballCollisionDiff = new Vector2f();
     private final List<Level> levels = new ArrayList<>();
-    private int level = 1;
+    public int level = 1;
     public int state = GAME_MENU;
     private final Matrix4f projectionMatrix = new Matrix4f().setOrtho2D(0, LEVEL_WIDTH, 0, LEVEL_HEIGHT);
     private final Matrix4fStack modelMatrix = new Matrix4fStack(2);
+    public final PropertiesConfig propertiesConfig = new PropertiesConfig();
+    public final JsonConfig jsonConfig = new JsonConfig();
 
     public Level loadLevel(FileContext fileContext, int screenWidth, int screenHeight) {
         Level level = new Level();
@@ -190,6 +205,53 @@ public final class Breakout extends Game {
         Fe2D.assets.putAsset(TRUE_TYPE_FONT, trueTypeFont);
 
         openScreen(new MenuScreen());
+
+        FileContext properties = Fe2D.files.local("breakout.properties");
+        log(USE_STDERR, propertiesConfig.getString("breakout"));
+        if (Files.exists(Path.of("breakout.properties"))) {
+            propertiesConfig.load(properties);
+            log(USE_STDERR, propertiesConfig.getString("breakout"));
+        }
+        propertiesConfig.put("breakout", "1.0.0");
+        log(USE_STDERR, propertiesConfig.getString("breakout"));
+        propertiesConfig.save(properties);
+        log(USE_STDERR, propertiesConfig.getString("breakout"));
+
+        log(USE_STDERR, "---------------");
+
+        jsonConfig.manage(Fe2D.files.local("breakout.json"));
+        log(USE_STDERR, jsonConfig.has("breakout") ? jsonConfig.getString("breakout") : "null");
+        log(USE_STDERR, jsonConfig.has("level") ? String.valueOf(jsonConfig.getInt("level")) : "null");
+        if (Files.exists(Path.of("breakout.json"))) {
+            jsonConfig.load();
+            log(USE_STDERR, jsonConfig.getString("breakout"));
+            log(USE_STDERR, String.valueOf(jsonConfig.getInt("level")));
+        }
+        jsonConfig.put("breakout", "1.0.0");
+        jsonConfig.put("level", 1);
+        log(USE_STDERR, jsonConfig.getString("breakout"));
+        log(USE_STDERR, String.valueOf(jsonConfig.getInt("level")));
+        jsonConfig.save();
+        jsonConfig.setAutoSave(true);
+        log(USE_STDERR, jsonConfig.getString("breakout"));
+        log(USE_STDERR, String.valueOf(jsonConfig.getInt("level")));
+
+        level = Math.clamp(1, MAX_LEVEL, jsonConfig.getInt("level"));
+
+        BinaryTags tags = BinaryData.ofTags();
+        tags.put("breakout", BinaryData.of("0.1.0"));
+        tags.put("level", BinaryData.of(1));
+        tags.put("int_array", BinaryData.of(new int[]{1, 2, 3, 4}));
+        tags.put("string_array", BinaryData.of(new String[]{"breakout", XENFORK_STR}));
+        BinaryTags ofTags = BinaryData.ofTags(Map.of("key", BinaryData.of("value")));
+        tags.put("data_array", BinaryData.of(new BinaryData[]{BinaryData.of(42), BinaryData.of(XENFORK_STR), ofTags}));
+        tags.put("compound", ofTags);
+        try(var oos = new ObjectOutputStream(Fe2D.files.local("breakout.bin").createOutputStream())) {
+            tags.write(oos);
+        } catch (IOException e) {
+            log(USE_STDERR, "Failed to write the binary data!");
+            e.printStackTrace();
+        }
     }
 
     public void doCollisions() {
@@ -324,12 +386,16 @@ public final class Breakout extends Game {
         MemoryUtil.memFree(trueTypeFont.fontData());
     }
 
+    public static Breakout getInstance() {
+        return instance;
+    }
+
     public static void main(String[] args) {
         ApplicationConfig config = new ApplicationConfig();
-        config.useStderr = true;
+        config.useStderr = USE_STDERR;
         config.applicationName = "Breakout";
         config.windowWidth = 1280;
         config.windowHeight = 720;
-        new Breakout().launch(config);
+        (instance = new Breakout()).launch(config);
     }
 }
