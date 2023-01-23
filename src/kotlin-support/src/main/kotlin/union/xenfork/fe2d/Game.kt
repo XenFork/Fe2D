@@ -51,6 +51,7 @@ fun game(
     windowHeight: Int = 600,
     windowTitle: String? = null,
     vsync: Boolean = true,
+    resizable: Boolean = true,
     block: KtGame.() -> Unit
 ) {
     KtGame().apply {
@@ -62,6 +63,7 @@ fun game(
             it.windowHeight = windowHeight
             it.windowTitle = windowTitle
             it.vsync = vsync
+            it.resizable = resizable
         })
     }
 }

@@ -102,6 +102,7 @@ public class Application implements Updatable, Disposable {
                 throw new IllegalStateException("Failed to initialize GLFW");
             }
             try {
+                glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
                 start();
                 window = glfwCreateWindow(config.windowWidth,
                     config.windowHeight,
@@ -176,6 +177,8 @@ public class Application implements Updatable, Disposable {
                     // Game loop
                     Fe2D.timer = new Timer();
                     double time = glfwGetTime();
+                    double lastTime = glfwGetTime();
+                    int frames = 0;
                     while (!glfwWindowShouldClose(window)) {
                         glfwPollEvents();
                         double delta = Fe2D.timer.advanceTime(this::fixedUpdate);
@@ -183,9 +186,15 @@ public class Application implements Updatable, Disposable {
                         lateUpdate();
                         render(delta);
                         glfwSwapBuffers(window);
+                        frames++;
                         double currTime = glfwGetTime();
                         Fe2D.graphics.setDeltaFrameTime(currTime - time);
                         time = currTime;
+                        if (currTime - lastTime > 1.0) {
+                            Fe2D.graphics.setFramesPerSecond(frames);
+                            frames = 0;
+                            lastTime = currTime;
+                        }
                     }
                     Fe2D.dispose();
                     dispose();

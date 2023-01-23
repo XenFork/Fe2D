@@ -30,6 +30,7 @@ public final class Graphics {
     private static final Graphics INSTANCE = new Graphics();
     private int width, height;
     private double deltaFrameTime;
+    private double framesPerSecond;
 
     private Graphics() {
     }
@@ -57,6 +58,15 @@ public final class Graphics {
     }
 
     /**
+     * Sets the frames per second.
+     *
+     * @param framesPerSecond the frames per second.
+     */
+    public void setFramesPerSecond(double framesPerSecond) {
+        this.framesPerSecond = framesPerSecond;
+    }
+
+    /**
      * Gets the width.
      *
      * @return the width.
@@ -81,6 +91,15 @@ public final class Graphics {
      */
     public double deltaFrameTime() {
         return deltaFrameTime;
+    }
+
+    /**
+     * Gets the frames per second.
+     *
+     * @return the frames per second.
+     */
+    public double framesPerSecond() {
+        return framesPerSecond;
     }
 
     /**

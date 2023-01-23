@@ -44,6 +44,7 @@ import union.xenfork.fe2d.graphics.sprite.Sprite;
 import union.xenfork.fe2d.graphics.texture.Texture;
 import union.xenfork.fe2d.graphics.texture.TextureAtlas;
 import union.xenfork.fe2d.graphics.texture.TextureParam;
+import union.xenfork.fe2d.gui.layout.Alignment;
 import union.xenfork.fe2d.util.ResourcePath;
 import union.xenfork.fe2d.util.math.Direction;
 
@@ -381,6 +382,11 @@ public final class Breakout extends Game {
                 THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG,
                 the quick brown fox jumps over the lazy dog.""", XENFORK_STR),
             0f, 100f);
+        String fpsText = Fe2D.graphics.framesPerSecond() + " fps";
+        renderer.draw(trueTypeFont,
+            fpsText,
+            0, Fe2D.graphics.height() - trueTypeFont.getScale(32f) * trueTypeFont.getTextHeight(fpsText),
+            Alignment.V.LEFT, 32f);
         renderer.end();
 
         ShaderProgram.ZERO.use();

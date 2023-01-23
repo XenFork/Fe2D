@@ -26,28 +26,32 @@ package union.xenfork.fe2d;
  */
 public final class ApplicationConfig {
     /**
-     * Set to {@code true} to use {@link System#out} instead of {@link org.slf4j.Logger SLF4J Logger}.
+     * Set to {@code true} to use {@link System#out} instead of {@link org.slf4j.Logger SLF4J Logger}. Defaults to {@code false}.
      */
     public boolean useStderr = false;
     /**
-     * The application name, which is the default value of the window title.
+     * The application name, which is the default value of the window title. Defaults to {@code "Fork Engine 2D Game"}.
      */
     public String applicationName = "Fork Engine 2D Game";
     /**
-     * The initial width of window.
+     * The initial width of window. Defaults to {@code 800}.
      */
     public int windowWidth = 800;
     /**
-     * The initial height of window.
+     * The initial height of window. Defaults to {@code 600}.
      */
     public int windowHeight = 600;
     /**
-     * The window title. This option overrides {@link #applicationName}.
+     * The window title. This option overrides {@link #applicationName}. Defaults to {@code null}.
      */
     public String windowTitle = null;
     /**
      * Set to {@code true} to use vertical-synchronization, which limits the max frames per second
-     * to the refresh rate of your monitor.
+     * to the refresh rate of your monitor. Defaults to {@code true}.
      */
     public boolean vsync = true;
+    /**
+     * Set to {@code true} to allow users resize the window. Defaults to {@code true}.
+     */
+    public boolean resizable = true;
 }
