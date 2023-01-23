@@ -63,7 +63,7 @@ public final class MenuScreen extends Screen {
                 level = 1;
             }
             Breakout.getInstance().level = level;
-            Breakout.getInstance().jsonConfig.put("level", level);
+            Breakout.getInstance().jsonConfig.set("level", level);
         }));
         button.setTextFont(font, 24f);
 

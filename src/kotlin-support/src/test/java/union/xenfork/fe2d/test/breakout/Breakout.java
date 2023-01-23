@@ -99,7 +99,7 @@ public final class Breakout extends Game {
     public final PropertiesConfig propertiesConfig = new PropertiesConfig();
     public final JsonConfig jsonConfig = new JsonConfig();
 
-    public Level loadLevel(FileContext fileContext, int screenWidth, int screenHeight) {
+    private Level loadLevel(FileContext fileContext, int screenWidth, int screenHeight) {
         Level level = new Level();
         level.load(fileContext.loadString(), screenWidth, screenHeight);
         return level;
@@ -211,7 +211,7 @@ public final class Breakout extends Game {
             propertiesConfig.load(properties);
             log(USE_STDERR, propertiesConfig.getString("breakout"));
         }
-        propertiesConfig.put("breakout", "1.0.0");
+        propertiesConfig.set("breakout", "1.0.0");
         log(USE_STDERR, propertiesConfig.getString("breakout"));
         propertiesConfig.save(properties);
         log(USE_STDERR, propertiesConfig.getString("breakout"));
@@ -226,8 +226,8 @@ public final class Breakout extends Game {
             log(USE_STDERR, jsonConfig.getString("breakout"));
             log(USE_STDERR, String.valueOf(jsonConfig.getInt("level")));
         }
-        jsonConfig.put("breakout", "1.0.0");
-        jsonConfig.put("level", 1);
+        jsonConfig.set("breakout", "1.0.0");
+        jsonConfig.set("level", 1);
         log(USE_STDERR, jsonConfig.getString("breakout"));
         log(USE_STDERR, String.valueOf(jsonConfig.getInt("level")));
         jsonConfig.save();
@@ -240,13 +240,13 @@ public final class Breakout extends Game {
         // write binary data
         try (var oos = new ObjectOutputStream(Fe2D.files.local("breakout.bin").createOutputStream())) {
             BinaryTags tags = BinaryData.ofTags();
-            tags.put("breakout", BinaryData.of("0.1.0"));
-            tags.put("level", BinaryData.of(1));
-            tags.put("int_array", BinaryData.of(new int[]{1, 2, 3, 4}));
-            tags.put("string_array", BinaryData.of(new String[]{"breakout", XENFORK_STR}));
+            tags.set("breakout", BinaryData.of("0.1.0"));
+            tags.set("level", BinaryData.of(1));
+            tags.set("int_array", BinaryData.of(new int[]{1, 2, 3, 4}));
+            tags.set("string_array", BinaryData.of(new String[]{"breakout", XENFORK_STR}));
             BinaryTags ofTags = BinaryData.ofTags(Map.of("key", BinaryData.of("value")));
-            tags.put("data_array", BinaryData.of(new BinaryData[]{BinaryData.of(42), BinaryData.of(XENFORK_STR), ofTags}));
-            tags.put("compound", ofTags);
+            tags.set("data_array", BinaryData.of(new BinaryData[]{BinaryData.of(42), BinaryData.of(XENFORK_STR), ofTags}));
+            tags.set("compound", ofTags);
             tags.write(oos);
         } catch (Exception e) {
             log(USE_STDERR, "Failed to write the binary data!");

@@ -53,7 +53,7 @@ public final class BinaryTags extends BinaryData {
         }
     }
 
-    public void put(String name, BinaryData data) {
+    public void set(String name, BinaryData data) {
         map.put(name, data);
     }
 

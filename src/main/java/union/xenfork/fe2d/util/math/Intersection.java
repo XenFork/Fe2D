@@ -40,7 +40,7 @@ public final class Intersection {
      * @param centerY       the y coordinate of the circle's center.
      * @param radiusSquared the square of the circle's radius.
      * @param result        a vector that will contain the values of the difference between aar and circle
-     *                      (in other say, this is the relative direction of circle to arr).
+     *                      (in other say, this is the direction from circle to arr).
      *                      the argument is not changed when returning {@code false}.
      * @return {@code true} iff the axis-aligned rectangle intersects the circle; {@code false} otherwise.
      */

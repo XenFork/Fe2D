@@ -37,7 +37,7 @@ public final class JsonConfig extends ManagedConfig<JsonElement> {
     private final JsonObject jsonObject = new JsonObject();
 
     @Override
-    public void put(String name, Object value) {
+    public void set(String name, Object value) {
         if (value instanceof Number number) {
             jsonObject.addProperty(name, number);
         } else if (value instanceof Boolean b) {

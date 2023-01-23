@@ -137,4 +137,13 @@ public class Game extends Application {
             screen.render(delta, Fe2D.input.cursorX(), Fe2D.input.cursorY());
         }
     }
+
+    /**
+     * Gets the current screen of this game.
+     *
+     * @return the current screen of this game.
+     */
+    public @Nullable Screen currentScreen() {
+        return screen;
+    }
 }

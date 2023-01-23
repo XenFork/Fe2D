@@ -38,12 +38,12 @@ public interface Configuration<T> {
     }
 
     /**
-     * Puts a value for the given name (and {@link #setAutoSave(boolean) saves} this configuration).
+     * Sets the value of the given property (and {@link #setAutoSave(boolean) saves} this configuration).
      *
      * @param name  the name of the property.
      * @param value the value.
      */
-    void put(String name, Object value);
+    void set(String name, Object value);
 
     /**
      * Returns {@code true} if the given property is present.
