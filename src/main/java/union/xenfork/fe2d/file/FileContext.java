@@ -20,10 +20,7 @@ package union.xenfork.fe2d.file;
 
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
+import java.io.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -49,7 +46,7 @@ public sealed abstract class FileContext permits InternalFileContext, LocalFileC
         this.path = path;
     }
 
-    IllegalStateException fail(IOException e) {
+    IllegalStateException fail(Exception e) {
         return new IllegalStateException("Failed to load file '" + path() + '\'', e);
     }
 
@@ -112,6 +109,16 @@ public sealed abstract class FileContext permits InternalFileContext, LocalFileC
      * @throws IllegalStateException if the file cannot be written, or failed to create the writer.
      */
     public abstract Writer createWriter() throws IllegalStateException;
+
+    /**
+     * Creates an input stream for this file context.
+     * <p>
+     * The input stream is buffered, and must be explicitly closed.
+     *
+     * @return the input stream.
+     * @throws IllegalStateException if failed to create the input stream.
+     */
+    public abstract InputStream createInputStream() throws IllegalStateException;
 
     /**
      * Creates an output stream for this file context.

@@ -18,8 +18,11 @@
 
 package union.xenfork.fe2d.file;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.ObjectOutput;
+import java.util.Arrays;
 
 /**
  * The binary data array.
@@ -58,5 +61,20 @@ public final class BinaryDataArray extends BinaryData {
 
     public BinaryData[] data() {
         return array;
+    }
+
+    @Override
+    public @NotNull BinaryDataArray asDataArraySafe() {
+        return this;
+    }
+
+    @Override
+    public boolean isDataArray() {
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(array);
     }
 }

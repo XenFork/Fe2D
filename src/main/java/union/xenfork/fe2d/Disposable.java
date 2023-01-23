@@ -29,8 +29,8 @@ package union.xenfork.fe2d;
 public interface Disposable {
     /**
      * Disposes this resource. Sub-resources should be also disposed.
-     *
-     * @implNote Re-dispose a disposed resource should be silently ignored.
+     * <p>
+     * <b>Note:</b> Re-dispose a disposed resource should be silently ignored.
      */
     void dispose();
 }

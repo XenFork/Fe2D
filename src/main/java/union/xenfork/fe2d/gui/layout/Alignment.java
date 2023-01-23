@@ -52,6 +52,7 @@ public final class Alignment {
         /**
          * Gets the position x that offset with the vertical alignment of this alignment.
          *
+         * @param originX   the origin position x of the text.
          * @param textWidth the text width in scaled coordinates.
          * @param boxWidth  the text box width.
          * @return the position x.
@@ -88,9 +89,10 @@ public final class Alignment {
         /**
          * Gets the position y that offset with the horizontal alignment of this alignment.
          *
+         * @param originY    the origin position y of the text.
          * @param textHeight the text height in scaled coordinates.
          * @param boxHeight  the text box height.
-         * @return the position x.
+         * @return the position y.
          */
         public float getTextPositionY(float originY, float textHeight, float boxHeight) {
             return switch (this) {

@@ -42,7 +42,7 @@ public final class InternalFileContext extends FileContext {
         super(path);
     }
 
-    private InputStream getInputStream() {
+    private InputStream getInputStream() throws NullPointerException {
         return Objects.requireNonNull(
             ClassLoader.getSystemResourceAsStream(path()),
             "Failed to get file '" + path() + "' from classpath"
@@ -55,7 +55,7 @@ public final class InternalFileContext extends FileContext {
             new InputStreamReader(getInputStream(), StandardCharsets.UTF_8)
         )) {
             return loadString(br);
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             throw fail(e);
         }
     }
@@ -80,7 +80,7 @@ public final class InternalFileContext extends FileContext {
                 }
             }
             return memSlice(buffer.flip());
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             throw fail(e);
         }
     }
@@ -93,6 +93,15 @@ public final class InternalFileContext extends FileContext {
     @Override
     public Writer createWriter() throws IllegalStateException {
         throw new IllegalStateException("Cannot write files to classpath!");
+    }
+
+    @Override
+    public InputStream createInputStream() throws IllegalStateException {
+        try {
+            return new BufferedInputStream(getInputStream());
+        } catch (NullPointerException e) {
+            throw fail(e);
+        }
     }
 
     @Override

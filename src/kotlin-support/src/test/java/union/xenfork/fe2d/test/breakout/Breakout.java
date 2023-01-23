@@ -47,13 +47,11 @@ import union.xenfork.fe2d.graphics.texture.TextureParam;
 import union.xenfork.fe2d.util.ResourcePath;
 import union.xenfork.fe2d.util.math.Direction;
 
-import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.joml.Math.*;
 import static org.lwjgl.opengl.GL11C.*;
@@ -238,18 +236,32 @@ public final class Breakout extends Game {
 
         level = Math.clamp(1, MAX_LEVEL, jsonConfig.getInt("level"));
 
-        BinaryTags tags = BinaryData.ofTags();
-        tags.put("breakout", BinaryData.of("0.1.0"));
-        tags.put("level", BinaryData.of(1));
-        tags.put("int_array", BinaryData.of(new int[]{1, 2, 3, 4}));
-        tags.put("string_array", BinaryData.of(new String[]{"breakout", XENFORK_STR}));
-        BinaryTags ofTags = BinaryData.ofTags(Map.of("key", BinaryData.of("value")));
-        tags.put("data_array", BinaryData.of(new BinaryData[]{BinaryData.of(42), BinaryData.of(XENFORK_STR), ofTags}));
-        tags.put("compound", ofTags);
-        try(var oos = new ObjectOutputStream(Fe2D.files.local("breakout.bin").createOutputStream())) {
+        // write binary data
+        try (var oos = new ObjectOutputStream(Fe2D.files.local("breakout.bin").createOutputStream())) {
+            BinaryTags tags = BinaryData.ofTags();
+            tags.put("breakout", BinaryData.of("0.1.0"));
+            tags.put("level", BinaryData.of(1));
+            tags.put("int_array", BinaryData.of(new int[]{1, 2, 3, 4}));
+            tags.put("string_array", BinaryData.of(new String[]{"breakout", XENFORK_STR}));
+            BinaryTags ofTags = BinaryData.ofTags(Map.of("key", BinaryData.of("value")));
+            tags.put("data_array", BinaryData.of(new BinaryData[]{BinaryData.of(42), BinaryData.of(XENFORK_STR), ofTags}));
+            tags.put("compound", ofTags);
             tags.write(oos);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log(USE_STDERR, "Failed to write the binary data!");
+            e.printStackTrace();
+        }
+        // read binary data
+        try (var ois = new ObjectInputStream(Fe2D.files.local("breakout.bin").createInputStream())) {
+            BinaryTags tags = Objects.requireNonNull(BinaryData.read(ois).asTagsSafe());
+            log(USE_STDERR, "breakout=" + tags.get("breakout").asString());
+            log(USE_STDERR, "level=" + tags.get("level").asInt());
+            log(USE_STDERR, "int_array=" + Arrays.toString(tags.get("int_array").asIntArray()));
+            log(USE_STDERR, "string_array=" + Arrays.toString(tags.get("string_array").asStringArray()));
+            log(USE_STDERR, "data_array=" + tags.get("data_array").asDataArraySafe());
+            log(USE_STDERR, "compound=" + tags.get("compound").asTagsSafe());
+        } catch (Exception e) {
+            log(USE_STDERR, "Failed to read the binary data!");
             e.printStackTrace();
         }
     }

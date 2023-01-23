@@ -85,6 +85,15 @@ public final class LocalFileContext extends FileContext {
     }
 
     @Override
+    public InputStream createInputStream() throws IllegalStateException {
+        try {
+            return new BufferedInputStream(new FileInputStream(path()));
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create the input stream for '" + path() + "'!", e);
+        }
+    }
+
+    @Override
     public OutputStream createOutputStream() throws IllegalStateException {
         try {
             return new BufferedOutputStream(new FileOutputStream(path()));

@@ -6,7 +6,7 @@
 
 These features are purposed to target:
 
-- (0.1.0) BinaryData
+- (?) ?
 
 These features are candidates:
 

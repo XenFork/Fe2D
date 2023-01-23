@@ -18,6 +18,8 @@
 
 package union.xenfork.fe2d.file;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.util.HashMap;
@@ -69,5 +71,34 @@ public final class BinaryTags extends BinaryData {
 
     public Map<String, BinaryData> data() {
         return map;
+    }
+
+    @Override
+    public @NotNull BinaryTags asTagsSafe() {
+        return this;
+    }
+
+    @Override
+    public boolean isTags() {
+        return true;
+    }
+
+    private static void appendString(StringBuilder sb, Map.Entry<String, BinaryData> e) {
+        sb.append(e.getKey()).append(": ").append(e.getValue());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(512).append('{');
+        var iterator = data().entrySet().iterator();
+        if (iterator.hasNext()) {
+            var e = iterator.next();
+            appendString(sb, e);
+            while (iterator.hasNext()) {
+                e = iterator.next();
+                appendString(sb.append(", "), e);
+            }
+        }
+        return sb.append('}').toString();
     }
 }

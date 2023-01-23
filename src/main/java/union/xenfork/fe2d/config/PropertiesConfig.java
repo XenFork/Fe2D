@@ -34,7 +34,7 @@ public final class PropertiesConfig extends ManagedConfig<String> {
     private final Properties properties = new Properties(16);
 
     @Override
-    public <T> void put(String name, T value) {
+    public void put(String name, Object value) {
         properties.put(name, String.valueOf(value));
         if (isAutoSave()) {
             save();

@@ -18,8 +18,12 @@
 
 package union.xenfork.fe2d.file;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -121,6 +125,92 @@ public sealed class BinaryData permits BinaryDataArray, BinaryTags {
         return new BinaryTags();
     }
 
+    public static BinaryData read(ObjectInput in) throws IOException {
+        byte type = in.readByte();
+        return switch (type) {
+            case TYPE_BYTE -> of(in.readByte());
+            case TYPE_SHORT -> of(in.readShort());
+            case TYPE_INT -> of(in.readInt());
+            case TYPE_LONG -> of(in.readLong());
+            case TYPE_FLOAT -> of(in.readFloat());
+            case TYPE_DOUBLE -> of(in.readDouble());
+            case TYPE_STRING -> of(in.readUTF());
+            case TYPE_BYTE_ARRAY -> {
+                int len = in.readInt();
+                byte[] arr = new byte[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readByte();
+                }
+                yield of(arr);
+            }
+            case TYPE_SHORT_ARRAY -> {
+                int len = in.readInt();
+                short[] arr = new short[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readShort();
+                }
+                yield of(arr);
+            }
+            case TYPE_INT_ARRAY -> {
+                int len = in.readInt();
+                int[] arr = new int[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readInt();
+                }
+                yield of(arr);
+            }
+            case TYPE_LONG_ARRAY -> {
+                int len = in.readInt();
+                long[] arr = new long[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readLong();
+                }
+                yield of(arr);
+            }
+            case TYPE_FLOAT_ARRAY -> {
+                int len = in.readInt();
+                float[] arr = new float[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readFloat();
+                }
+                yield of(arr);
+            }
+            case TYPE_DOUBLE_ARRAY -> {
+                int len = in.readInt();
+                double[] arr = new double[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readDouble();
+                }
+                yield of(arr);
+            }
+            case TYPE_STRING_ARRAY -> {
+                int len = in.readInt();
+                String[] arr = new String[len];
+                for (int i = 0; i < len; i++) {
+                    arr[i] = in.readUTF();
+                }
+                yield of(arr);
+            }
+            case TYPE_DATA_ARRAY -> {
+                int len = in.readInt();
+                BinaryData[] array = new BinaryData[len];
+                for (int i = 0; i < len; i++) {
+                    array[i] = read(in);
+                }
+                yield of(array);
+            }
+            case TYPE_TAGS -> {
+                int size = in.readInt();
+                var map = new HashMap<String, BinaryData>(size);
+                for (int i = 0; i < size; i++) {
+                    map.put(in.readUTF(), read(in));
+                }
+                yield ofTags(map);
+            }
+            default -> throw new IllegalStateException("Unexpected type " + type + " detected! This is a bug!");
+        };
+    }
+
     public void write(ObjectOutput out) throws IOException {
         out.writeByte(type);
         switch (type) {
@@ -186,11 +276,101 @@ public sealed class BinaryData permits BinaryDataArray, BinaryTags {
         }
     }
 
+    public byte asByte() {
+        return (byte) value();
+    }
+
+    public short asShort() {
+        return (short) value();
+    }
+
+    public int asInt() {
+        return (int) value();
+    }
+
+    public long asLong() {
+        return (long) value();
+    }
+
+    public float asFloat() {
+        return (float) value();
+    }
+
+    public double asDouble() {
+        return (double) value();
+    }
+
+    public String asString() {
+        return (String) value();
+    }
+
+    public byte[] asByteArray() {
+        return (byte[]) value();
+    }
+
+    public short[] asShortArray() {
+        return (short[]) value();
+    }
+
+    public int[] asIntArray() {
+        return (int[]) value();
+    }
+
+    public long[] asLongArray() {
+        return (long[]) value();
+    }
+
+    public float[] asFloatArray() {
+        return (float[]) value();
+    }
+
+    public double[] asDoubleArray() {
+        return (double[]) value();
+    }
+
+    public String[] asStringArray() {
+        return (String[]) value();
+    }
+
+    public @Nullable BinaryDataArray asDataArraySafe() {
+        return isDataArray() ? (BinaryDataArray) this : null;
+    }
+
+    public @Nullable BinaryTags asTagsSafe() {
+        return isTags() ? (BinaryTags) this : null;
+    }
+
+    public boolean isDataArray() {
+        return type() == TYPE_DATA_ARRAY;
+    }
+
+    public boolean isTags() {
+        return type() == TYPE_TAGS;
+    }
+
+    /**
+     * Gets the type of this binary data.
+     *
+     * @return the type of this binary data.
+     */
     public int type() {
         return type;
     }
 
+    /**
+     * Gets the value of this binary data.
+     *
+     * @return the value of this binary data.
+     */
     public Object value() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        if (type() == TYPE_STRING) {
+            return '"' + String.valueOf(value()) + '"';
+        }
+        return String.valueOf(value());
     }
 }
