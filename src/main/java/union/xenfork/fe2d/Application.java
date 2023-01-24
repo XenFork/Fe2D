@@ -148,6 +148,7 @@ public class Application implements Updatable, Disposable {
                         onMouseButton(button,
                             action == GLFW_PRESS ? Input.Action.PRESS : Input.Action.RELEASE,
                             mods));
+                    glfwSetScrollCallback(window, (handle, xoffset, yoffset) -> onScroll(xoffset, yoffset));
 
                     // Makes center
                     //if (config.windowMonitor != MemoryUtil.NULL) {
@@ -255,6 +256,15 @@ public class Application implements Updatable, Disposable {
      * @param mods   bitfield describing which modifiers keys were held down.
      */
     public void onMouseButton(int button, @NotNull Input.Action action, int mods) {
+    }
+
+    /**
+     * Will be called when a scrolling device is used, such as a mouse wheel or scrolling area of a touchpad.
+     *
+     * @param offsetX the scroll offset along the x-axis.
+     * @param offsetY the scroll offset along the y-axis.
+     */
+    public void onScroll(double offsetX, double offsetY) {
     }
 
     ///////////////////////////////////////////////////////////////////////////

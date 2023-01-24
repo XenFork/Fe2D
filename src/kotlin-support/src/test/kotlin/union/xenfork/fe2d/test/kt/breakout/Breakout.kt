@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package union.xenfork.fe2d.kt.test.breakout
+package union.xenfork.fe2d.test.kt.breakout
 
 import org.joml.Math
 import org.joml.Matrix4f

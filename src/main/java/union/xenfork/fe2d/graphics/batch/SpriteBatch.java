@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 import union.xenfork.fe2d.Fe2D;
 import union.xenfork.fe2d.graphics.Color;
 import union.xenfork.fe2d.graphics.GLStateManager;
@@ -50,13 +51,12 @@ public class SpriteBatch implements Batch {
      * The max sprites.
      */
     public static final int MAX_SPRITES = Integer.MAX_VALUE / Sprite.SPRITE_SIZE / Sprite.SPRITE_VERTEX;
-    private static final Matrix4fc IDENTITY_MAT = new Matrix4f();
     private final Mesh mesh;
     private final int maxVertexBytesSize;
     private final Matrix4f projectionMatrix = new Matrix4f();
     private final Matrix4f modelMatrix = new Matrix4f();
     private final Matrix4f combinedMatrix = new Matrix4f();
-    private final Matrix4f spriteMatrix = new Matrix4f();
+    private final Vector3f spriteRotation = new Vector3f();
     final ShaderProgram shader;
     private ShaderProgram customShader;
     private final boolean ownsShader;
@@ -246,41 +246,151 @@ public class SpriteBatch implements Batch {
     }
 
     @Override
-    public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform) {
+    public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, float u0, float v0, float u1, float v1, boolean flipX, boolean flipY) {
         checkDrawing();
         if (texture != lastTexture)
             switchTexture(texture);
         else if (vertexBufferPos >= maxVertexBytesSize)
             flush();
 
-        float x0, y0, x1, y1;
-        if ((transform.properties() & Matrix4fc.PROPERTY_IDENTITY) != 0) {
-            x0 = x;
-            y0 = y;
-            x1 = x + width;
-            y1 = y + height;
+        // bottom left and top right corner points relative to origin
+        final float worldOriginX = x + originX;
+        final float worldOriginY = y + originY;
+        float fx = -originX;
+        float fy = -originY;
+        float fx2 = width - originX;
+        float fy2 = height - originY;
+
+        // scale
+        if (scaleX != 1 || scaleY != 1) {
+            fx *= scaleX;
+            fy *= scaleY;
+            fx2 *= scaleX;
+            fy2 *= scaleY;
+        }
+
+        // construct corner points, start from top left and go counter-clockwise
+        final float p1x = fx;
+        final float p1y = fy;
+        final float p2x = fx;
+        final float p2y = fy2;
+        final float p3x = fx2;
+        final float p3y = fy2;
+        final float p4x = fx2;
+        final float p4y = fy;
+
+        float x1, y1, x2, y2, x3, y3, x4, y4;
+
+        // rotate
+        if (rotation != 0) {
+            final float sin = Math.sin(rotation);
+            final float cos = Math.cosFromSin(sin, rotation);
+
+            x1 = cos * p1x - sin * p1y;
+            y1 = sin * p1x + cos * p1y;
+
+            x2 = cos * p2x - sin * p2y;
+            y2 = sin * p2x + cos * p2y;
+
+            x3 = cos * p3x - sin * p3y;
+            y3 = sin * p3x + cos * p3y;
+
+            x4 = x1 + (x3 - x2);
+            y4 = y3 - (y2 - y1);
         } else {
-            x0 = Math.fma(transform.m00(), x, Math.fma(transform.m10(), y, transform.m30()));
-            y0 = Math.fma(transform.m01(), x, Math.fma(transform.m11(), y, transform.m31()));
-            x1 = Math.fma(transform.m00(), x + width, Math.fma(transform.m10(), y + height, transform.m30()));
-            y1 = Math.fma(transform.m01(), x + width, Math.fma(transform.m11(), y + height, transform.m31()));
+            x1 = p1x;
+            y1 = p1y;
+
+            x2 = p2x;
+            y2 = p2y;
+
+            x3 = p3x;
+            y3 = p3y;
+
+            x4 = p4x;
+            y4 = p4y;
+        }
+
+        x1 += worldOriginX;
+        y1 += worldOriginY;
+        x2 += worldOriginX;
+        y2 += worldOriginY;
+        x3 += worldOriginX;
+        y3 += worldOriginY;
+        x4 += worldOriginX;
+        y4 += worldOriginY;
+
+        if (flipX) {
+            float tmp = u0;
+            u0 = u1;
+            u1 = tmp;
+        }
+
+        if (flipY) {
+            float tmp = v0;
+            v0 = v1;
+            v1 = tmp;
         }
 
         mesh.vertexBuffer()
             // left-top
-            .putFloat(vertexBufferPos, x0).putFloat(vertexBufferPos + 4, y1)
+            .putFloat(vertexBufferPos, x1).putFloat(vertexBufferPos + 4, y1)
+            .putInt(vertexBufferPos + 8, colorBits)
+            .putFloat(vertexBufferPos + 12, u0).putFloat(vertexBufferPos + 16, v1)
+            // left-bottom
+            .putFloat(vertexBufferPos + 20, x2).putFloat(vertexBufferPos + 24, y2)
+            .putInt(vertexBufferPos + 28, colorBits)
+            .putFloat(vertexBufferPos + 32, u0).putFloat(vertexBufferPos + 36, v0)
+            // right-bottom
+            .putFloat(vertexBufferPos + 40, x3).putFloat(vertexBufferPos + 44, y3)
+            .putInt(vertexBufferPos + 48, colorBits)
+            .putFloat(vertexBufferPos + 52, u1).putFloat(vertexBufferPos + 56, v0)
+            // right-top
+            .putFloat(vertexBufferPos + 60, x4).putFloat(vertexBufferPos + 64, y4)
+            .putInt(vertexBufferPos + 68, colorBits)
+            .putFloat(vertexBufferPos + 72, u1).putFloat(vertexBufferPos + 76, v1);
+        vertexBufferPos += Sprite.SPRITE_SIZE;
+        drawnSpriteCount++;
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, boolean flipX, boolean flipY) {
+        checkDrawing();
+        if (texture != lastTexture)
+            switchTexture(texture);
+        else if (vertexBufferPos >= maxVertexBytesSize)
+            flush();
+
+        final float fx2 = x + width;
+        final float fy2 = y + height;
+
+        if (flipX) {
+            float tmp = u0;
+            u0 = u1;
+            u1 = tmp;
+        }
+
+        if (flipY) {
+            float tmp = v0;
+            v0 = v1;
+            v1 = tmp;
+        }
+
+        mesh.vertexBuffer()
+            // left-top
+            .putFloat(vertexBufferPos, x).putFloat(vertexBufferPos + 4, fy2)
             .putInt(vertexBufferPos + 8, colorBits)
             .putFloat(vertexBufferPos + 12, u0).putFloat(vertexBufferPos + 16, v0)
             // left-bottom
-            .putFloat(vertexBufferPos + 20, x0).putFloat(vertexBufferPos + 24, y0)
+            .putFloat(vertexBufferPos + 20, x).putFloat(vertexBufferPos + 24, y)
             .putInt(vertexBufferPos + 28, colorBits)
             .putFloat(vertexBufferPos + 32, u0).putFloat(vertexBufferPos + 36, v1)
             // right-bottom
-            .putFloat(vertexBufferPos + 40, x1).putFloat(vertexBufferPos + 44, y0)
+            .putFloat(vertexBufferPos + 40, fx2).putFloat(vertexBufferPos + 44, y)
             .putInt(vertexBufferPos + 48, colorBits)
             .putFloat(vertexBufferPos + 52, u1).putFloat(vertexBufferPos + 56, v1)
             // right-top
-            .putFloat(vertexBufferPos + 60, x1).putFloat(vertexBufferPos + 64, y1)
+            .putFloat(vertexBufferPos + 60, fx2).putFloat(vertexBufferPos + 64, fy2)
             .putInt(vertexBufferPos + 68, colorBits)
             .putFloat(vertexBufferPos + 72, u1).putFloat(vertexBufferPos + 76, v0);
         vertexBufferPos += Sprite.SPRITE_SIZE;
@@ -289,7 +399,34 @@ public class SpriteBatch implements Batch {
 
     @Override
     public void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
-        draw(texture, x, y, width, height, u0, v0, u1, v1, IDENTITY_MAT);
+        checkDrawing();
+        if (texture != lastTexture)
+            switchTexture(texture);
+        else if (vertexBufferPos >= maxVertexBytesSize)
+            flush();
+
+        final float fx2 = x + width;
+        final float fy2 = y + height;
+
+        mesh.vertexBuffer()
+            // left-top
+            .putFloat(vertexBufferPos, x).putFloat(vertexBufferPos + 4, fy2)
+            .putInt(vertexBufferPos + 8, colorBits)
+            .putFloat(vertexBufferPos + 12, u0).putFloat(vertexBufferPos + 16, v0)
+            // left-bottom
+            .putFloat(vertexBufferPos + 20, x).putFloat(vertexBufferPos + 24, y)
+            .putInt(vertexBufferPos + 28, colorBits)
+            .putFloat(vertexBufferPos + 32, u0).putFloat(vertexBufferPos + 36, v1)
+            // right-bottom
+            .putFloat(vertexBufferPos + 40, fx2).putFloat(vertexBufferPos + 44, y)
+            .putInt(vertexBufferPos + 48, colorBits)
+            .putFloat(vertexBufferPos + 52, u1).putFloat(vertexBufferPos + 56, v1)
+            // right-top
+            .putFloat(vertexBufferPos + 60, fx2).putFloat(vertexBufferPos + 64, fy2)
+            .putInt(vertexBufferPos + 68, colorBits)
+            .putFloat(vertexBufferPos + 72, u1).putFloat(vertexBufferPos + 76, v0);
+        vertexBufferPos += Sprite.SPRITE_SIZE;
+        drawnSpriteCount++;
     }
 
     @Override
@@ -303,19 +440,35 @@ public class SpriteBatch implements Batch {
     }
 
     @Override
-    public void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, Matrix4fc transform) {
+    public void draw(Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, TextureRegion region, boolean flipX, boolean flipY) {
+        // important: this.invTexWidth/Height is set in switchTexture. we must compute them first
+        if (texture != lastTexture)
+            switchTexture(texture);
+        draw(texture, x, y, originX, originY, width, height, scaleX, scaleY, rotation,
+            region.u0() * invTexWidth, region.v0() * invTexHeight,
+            region.u1() * invTexWidth, region.v1() * invTexHeight,
+            flipX, flipY);
+    }
+
+    @Override
+    public void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, boolean flipX, boolean flipY) {
         // important: this.invTexWidth/Height is set in switchTexture. we must compute them first
         if (texture != lastTexture)
             switchTexture(texture);
         draw(texture, x, y, width, height,
             region.u0() * invTexWidth, region.v0() * invTexHeight,
             region.u1() * invTexWidth, region.v1() * invTexHeight,
-            transform);
+            flipX, flipY);
     }
 
     @Override
     public void draw(Texture texture, float x, float y, float width, float height, TextureRegion region) {
-        draw(texture, x, y, width, height, region, IDENTITY_MAT);
+        // important: this.invTexWidth/Height is set in switchTexture. we must compute them first
+        if (texture != lastTexture)
+            switchTexture(texture);
+        draw(texture, x, y, width, height,
+            region.u0() * invTexWidth, region.v0() * invTexHeight,
+            region.u1() * invTexWidth, region.v1() * invTexHeight);
     }
 
     @Override
@@ -324,19 +477,23 @@ public class SpriteBatch implements Batch {
     }
 
     /**
-     * Draws a sprite with the given transformation.
+     * Draws a sprite. FlipX and flipY specify whether the texture portion should be flipped horizontally or vertically.
      *
-     * @param sprite    the sprite to be drawn.
-     * @param transform the matrix transformation.
+     * @param sprite the sprite to be drawn.
+     * @param flipX  whether to flip the sprite horizontally.
+     * @param flipY  whether to flip the sprite vertically.
      */
-    public void draw(Sprite sprite, Matrix4fc transform) {
+    public void draw(Sprite sprite, boolean flipX, boolean flipY) {
         int currColor = spriteColor();
         setSpriteColor(sprite.color);
         draw(sprite.texture,
-            0f, 0f,
+            sprite.position.x(), sprite.position.y(),
+            sprite.anchor.x(), sprite.anchor.y(),
             sprite.size.x(), sprite.size.y(),
+            sprite.scale.x(), sprite.scale.y(),
+            sprite.rotation.getEulerAnglesZYX(spriteRotation).z(),
             sprite.textureRegion,
-            transform.mul(sprite.getTransform(), spriteMatrix));
+            flipX, flipY);
         setSpriteColor(currColor);
     }
 
@@ -346,14 +503,7 @@ public class SpriteBatch implements Batch {
      * @param sprite the sprite to be drawn.
      */
     public void draw(Sprite sprite) {
-        int currColor = spriteColor();
-        setSpriteColor(sprite.color);
-        draw(sprite.texture,
-            0f, 0f,
-            sprite.size.x(), sprite.size.y(),
-            sprite.textureRegion,
-            sprite.getTransform());
-        setSpriteColor(currColor);
+        draw(sprite, false, false);
     }
 
     private void setupMatrices() {

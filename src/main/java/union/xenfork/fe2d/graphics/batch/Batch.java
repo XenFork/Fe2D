@@ -48,7 +48,9 @@ public interface Batch extends Disposable {
      */
     void flush();
 
-    void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, Matrix4fc transform);
+    void draw(Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, float u0, float v0, float u1, float v1, boolean flipX, boolean flipY);
+
+    void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, boolean flipX, boolean flipY);
 
     void draw(Texture texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1);
 
@@ -56,7 +58,9 @@ public interface Batch extends Disposable {
 
     void draw(Texture texture, float x, float y);
 
-    void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, Matrix4fc transform);
+    void draw(Texture texture, float x, float y, float originX, float originY, float width, float height, float scaleX, float scaleY, float rotation, TextureRegion region, boolean flipX, boolean flipY);
+
+    void draw(Texture texture, float x, float y, float width, float height, TextureRegion region, boolean flipX, boolean flipY);
 
     void draw(Texture texture, float x, float y, float width, float height, TextureRegion region);
 
