@@ -93,8 +93,11 @@ public final class ShaderProgram implements Disposable {
         glShaderSource(shader, source);
         glCompileShader(shader);
         if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL_FALSE) {
-            glDeleteShader(shader);
-            throw new IllegalStateException("Failed to compile the " + typeName + " shader! " + glGetShaderInfoLog(shader));
+            try {
+                throw new IllegalStateException("Failed to compile the " + typeName + " shader! " + glGetShaderInfoLog(shader));
+            } finally {
+                glDeleteShader(shader);
+            }
         }
         return shader;
     }
@@ -187,10 +190,13 @@ public final class ShaderProgram implements Disposable {
         }
         glLinkProgram(id);
         if (glGetProgrami(id, GL_LINK_STATUS) == GL_FALSE) {
-            glDeleteShader(vsh);
-            glDeleteShader(fsh);
-            dispose();
-            throw new IllegalStateException("Failed to link the shader program! " + glGetProgramInfoLog(id));
+            try {
+                glDeleteShader(vsh);
+                glDeleteShader(fsh);
+                throw new IllegalStateException("Failed to link the shader program! " + glGetProgramInfoLog(id));
+            } finally {
+                dispose();
+            }
         }
         glDetachShader(id, vsh);
         glDetachShader(id, fsh);
