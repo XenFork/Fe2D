@@ -77,6 +77,18 @@ public final class ShaderUniform implements Disposable {
                 if (arb) glProgramUniform1i(program.id(), location, buffer.getInt(0));
                 else glUniform1i(location, buffer.getInt(0));
             }
+            case FLOAT -> {
+                if (arb) glProgramUniform1f(program.id(), location, buffer.getFloat(0));
+                else glUniform1f(location, buffer.getFloat(0));
+            }
+            case VEC2 -> {
+                if (arb) nglProgramUniform2fv(program.id(), location, 2, memAddress(buffer));
+                else nglUniform2fv(location, 2, memAddress(buffer));
+            }
+            case VEC3 -> {
+                if (arb) nglProgramUniform3fv(program.id(), location, 3, memAddress(buffer));
+                else nglUniform3fv(location, 3, memAddress(buffer));
+            }
             case VEC4 -> {
                 if (arb) nglProgramUniform4fv(program.id(), location, 4, memAddress(buffer));
                 else nglUniform4fv(location, 4, memAddress(buffer));
@@ -84,6 +96,10 @@ public final class ShaderUniform implements Disposable {
             case MAT2 -> {
                 if (arb) nglProgramUniformMatrix2fv(program.id(), location, 1, false, memAddress(buffer));
                 else nglUniformMatrix2fv(location, 1, false, memAddress(buffer));
+            }
+            case MAT3 -> {
+                if (arb) nglProgramUniformMatrix3fv(program.id(), location, 1, false, memAddress(buffer));
+                else nglUniformMatrix3fv(location, 1, false, memAddress(buffer));
             }
             case MAT4 -> {
                 if (arb) nglProgramUniformMatrix4fv(program.id(), location, 1, false, memAddress(buffer));
@@ -111,8 +127,12 @@ public final class ShaderUniform implements Disposable {
      */
     public enum Type {
         INT(1, DataType.INT),
+        FLOAT(1, DataType.FLOAT),
+        VEC2(2, DataType.FLOAT),
+        VEC3(3, DataType.FLOAT),
         VEC4(4, DataType.FLOAT),
         MAT2(4, DataType.FLOAT),
+        MAT3(9, DataType.FLOAT),
         MAT4(16, DataType.FLOAT),
         ;
 

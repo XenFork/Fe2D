@@ -158,8 +158,8 @@ public final class Breakout extends Game {
         GLStateManager.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         shaderProgram = new ShaderProgram(
-            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.vsh")).loadString(),
-            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.fsh")).loadString(),
+            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.vert")).loadString(),
+            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.frag")).loadString(),
             Sprite.LAYOUT
         );
         shaderProgram.addSampler(0);

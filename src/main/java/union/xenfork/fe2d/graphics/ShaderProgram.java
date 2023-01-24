@@ -18,9 +18,7 @@
 
 package union.xenfork.fe2d.graphics;
 
-import org.joml.Matrix2fc;
-import org.joml.Matrix4fc;
-import org.joml.Vector4fc;
+import org.joml.*;
 import union.xenfork.fe2d.Disposable;
 import union.xenfork.fe2d.graphics.vertex.VertexLayout;
 
@@ -38,8 +36,9 @@ import static org.lwjgl.opengl.GL20C.*;
  * <ul>
  *     <li>{@value U_PROJECTION_MATRIX}</li>
  *     <li>{@value U_VIEW_MATRIX}</li>
- *     <li>{@value U_PROJECTION_VIEW_MATRIX}</li>
  *     <li>{@value U_MODEL_MATRIX}</li>
+ *     <li>{@value U_PROJECTION_VIEW_MATRIX}</li>
+ *     <li>{@value U_VIEW_MODEL_MATRIX}</li>
  *     <li>{@value U_PROJECTION_VIEW_MODEL_MATRIX}</li>
  * </ul>
  * These uniforms are passed with arguments:
@@ -64,13 +63,17 @@ public final class ShaderProgram implements Disposable {
      */
     public static final String U_VIEW_MATRIX = "fe_ViewMatrix";
     /**
+     * The name of the model matrix uniform.
+     */
+    public static final String U_MODEL_MATRIX = "fe_ModelMatrix";
+    /**
      * The name of the projection view matrix uniform.
      */
     public static final String U_PROJECTION_VIEW_MATRIX = "fe_ProjViewMatrix";
     /**
-     * The name of the model matrix uniform.
+     * The name of the view model matrix uniform.
      */
-    public static final String U_MODEL_MATRIX = "fe_ModelMatrix";
+    public static final String U_VIEW_MODEL_MATRIX = "fe_ViewModelMatrix";
     /**
      * The name of the projection view model matrix uniform.
      */
@@ -253,6 +256,45 @@ public final class ShaderProgram implements Disposable {
     /**
      * Sets the uniform with the given value.
      *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, float value) {
+        getUniform(name, ShaderUniform.Type.FLOAT).orElseThrow()
+            .markDirty()
+            .buffer.putFloat(0, value);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name the name of the uniform.
+     * @param x    the value x.
+     * @param y    the value y.
+     */
+    public void setUniform(String name, float x, float y) {
+        getUniform(name, ShaderUniform.Type.VEC2).orElseThrow()
+            .markDirty()
+            .buffer.putFloat(0, x).putFloat(4, y);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name the name of the uniform.
+     * @param x    the value x.
+     * @param y    the value y.
+     * @param z    the value z.
+     */
+    public void setUniform(String name, float x, float y, float z) {
+        getUniform(name, ShaderUniform.Type.VEC3).orElseThrow()
+            .markDirty()
+            .buffer.putFloat(0, x).putFloat(4, y).putFloat(8, z);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
      * @param name the name of the uniform.
      * @param x    the value x.
      * @param y    the value y.
@@ -263,6 +305,26 @@ public final class ShaderProgram implements Disposable {
         getUniform(name, ShaderUniform.Type.VEC4).orElseThrow()
             .markDirty()
             .buffer.putFloat(0, x).putFloat(4, y).putFloat(8, z).putFloat(12, w);
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Vector2fc value) {
+        setUniform(name, value.x(), value.y());
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Vector3fc value) {
+        setUniform(name, value.x(), value.y(), value.z());
     }
 
     /**
@@ -284,6 +346,20 @@ public final class ShaderProgram implements Disposable {
     public void setUniform(String name, Matrix2fc value) {
         value.get(
             getUniform(name, ShaderUniform.Type.MAT2).orElseThrow()
+                .markDirty()
+                .buffer
+        );
+    }
+
+    /**
+     * Sets the uniform with the given value.
+     *
+     * @param name  the name of the uniform.
+     * @param value the value.
+     */
+    public void setUniform(String name, Matrix3fc value) {
+        value.get(
+            getUniform(name, ShaderUniform.Type.MAT3).orElseThrow()
                 .markDirty()
                 .buffer
         );
@@ -322,6 +398,15 @@ public final class ShaderProgram implements Disposable {
     }
 
     /**
+     * Sets the model matrix uniform with the given value.
+     *
+     * @param value the value.
+     */
+    public void setModelMatrix(Matrix4fc value) {
+        setUniform(U_MODEL_MATRIX, value);
+    }
+
+    /**
      * Sets the projection view matrix uniform with the given value.
      *
      * @param value the value.
@@ -331,12 +416,12 @@ public final class ShaderProgram implements Disposable {
     }
 
     /**
-     * Sets the model matrix uniform with the given value.
+     * Sets the view model matrix uniform with the given value.
      *
      * @param value the value.
      */
-    public void setModelMatrix(Matrix4fc value) {
-        setUniform(U_MODEL_MATRIX, value);
+    public void setViewModelMatrix(Matrix4fc value) {
+        setUniform(U_VIEW_MODEL_MATRIX, value);
     }
 
     /**

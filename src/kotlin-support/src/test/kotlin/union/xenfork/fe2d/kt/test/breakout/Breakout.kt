@@ -213,8 +213,8 @@ fun main() = game(
         GLStateManager.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         shaderProgram = ShaderProgram(
-            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.vsh")).loadString(),
-            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.fsh")).loadString(),
+            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.vert")).loadString(),
+            Fe2D.files.internal(ResourcePath.assets("breakout:shader/shader.frag")).loadString(),
             Sprite.LAYOUT
         ).apply { addSampler(0) }
 
